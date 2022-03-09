@@ -1,26 +1,26 @@
 module testbench;
+  // CORDIC data inputs
   reg[31:0] r_x = 0;
   reg[31:0] r_y = 0;
   reg[31:0] r_z = 0;
-  reg r_d 		= 1;
-  
+
+  // CORDIC control inputs
+  reg r_d 		= 1;  
   reg r_mode 	= 0;
-  
-  wire[31:0] r_lut;
-  
-  reg[31:0] r_lut_mem[20];
-  
   reg[4:0] r_shift_amnt = 0;
   
+  // CORDIC LUT input
+  wire[31:0] r_lut;
+  
+  // CORDIC Lookup table
+  reg[31:0] r_lut_mem[20];
+
+  // CORDIC outputs
   wire[31:0] w_x;
   wire[31:0] w_y;
   wire[31:0] w_z;
-  wire w_d;
-  
-  reg r_enable = 0;
-  
-  event e_sync;
-  
+
+  // Initializing the CORDIC core
   cordic #(.p_WIDTH(32)) dut (
     .i_xprev(r_x),
     .i_yprev(r_y),
@@ -31,11 +31,31 @@ module testbench;
     .i_shift_amnt(r_shift_amnt),
     .o_xnext(w_x),
     .o_ynext(w_y),
-    .o_znext(w_z),
-    .o_dnext(w_d)
+    .o_znext(w_z)
   );
+
+  // For the control logic to function
+  reg r_enable = 0;
   
-  int i;
+  // Event for triggering a CORDIC iteration
+  event e_sync;
+
+  // Trigger CORDIC event
+  always #1 ->e_sync;
+
+  // Controller logic for rotation
+  always @e_sync if(r_enable) begin
+  	r_x <= w_x;
+    r_y <= w_y;
+    r_z <= w_z;
+    r_d <= ~w_z[31];
+    r_shift_amnt <= r_shift_amnt + 1;
+  end
+  
+  // Look up the LUT value for current iteration number (thats equal to the shift amount)
+  assign r_lut = r_lut_mem[r_shift_amnt];
+  
+  // The angle input
   real angle_deg = 10;
   real angle_rad = angle_deg * $acos(-1) / 180;
   
@@ -45,6 +65,7 @@ module testbench;
 	
     // Circular mode settings
     /*
+    // Set lookup table to tan inverse of 2^-i
     r_lut_mem = {
       32'h20000000,
       32'h12E4051D,
@@ -69,17 +90,23 @@ module testbench;
     };
 	
     @(e_sync);
-    r_x = frac_to_hex(0.6072529350092496);
-    r_y = 0;
-    r_z = degrees_to_hex(angle_deg);
 
-    r_mode = 1;			// Circular mode
-    r_enable = 1;		// Start computation
+    // CORDIC initial data inputs
+    r_x = frac_to_hex(0.6072529350092496);		// Load the multiplication factor into x field (in q.31 representation)
+    r_y = 0;									// Load 0 into y field
+    r_z = degrees_to_hex(angle_deg);			// Load angle into z field (in q.31 representation)
+	
+    // CORDIC initial control inputs
     r_d = ~r_z[31];
+    r_mode = 1;									// Circular mode
+    r_shift_amnt = 0;							// Circular rotations must start from i = 0
+    
+    r_enable = 1;								// Start computation
     */
     
     // Hyperbolic mode settings
 	///*
+    // Set lookup table to tanh inverse of 2^-i
     r_lut_mem = {
       32'h00000000,
       32'h1661788D,
@@ -102,49 +129,48 @@ module testbench;
       32'h00000A2F,
       32'h00000517
     };
-    
+
 	@(e_sync);
- 	r_x = frac_to_hex2(1.2051363584457304);
-    $display(hex2_to_frac(r_x));
-    r_y = 0;
-    r_z = degrees_to_hex(angle_deg);
-	// r_z = 0;
     
-    r_mode = 0;			// Circular mode
-    r_shift_amnt = 1;
-    r_enable = 1;		// Start computation
+    // CORDIC initial data inputs
+    r_x = frac_to_hex2(1.2051363584457304);		// Load the multiplication factor into x field (in q3.28 representation)
+    r_y = 0;									// Load 0 into y field
+    r_z = degrees_to_hex(angle_deg);			// Load angle into z field (in q.31 representation)
+	
+    // CORDIC initial control inputs
     r_d = ~r_z[31];
+    r_mode = 0;									// Hyperbolic mode
+    r_shift_amnt = 1;							// Hyperbolic rotations must start with 1 (because arctanh(1) = inf)
+    
+    r_enable = 1;								// Start computation
 	//*/
 
     #1;
     
+    // 20 iterations
     repeat(20) begin
-      disp_state_frac_2(r_x, r_y, r_z);
-      //$display("%8h | %8h | %8h", r_x, r_y, r_z);
-      @(e_sync);
+      if(r_mode)
+        disp_state_frac(r_x, r_y, r_z);			// Show x, y in q.31 representation and z in degrees for circular mode
+      else
+        disp_state_frac_2(r_x, r_y, r_z);		// Show x, y in q3.28 representation and z in degrees for hyperbolic mode
+      @(e_sync);								// Compute 1 iteration of CORDIC
     end
     
-    disp_state_frac_2(r_x, r_y, r_z);
-    $display("cos : %f, sine : %f", $cos(angle_rad), $sin(angle_rad));
-    $display("cosh : %f, sinh : %f", $cosh(angle_rad), $sinh(angle_rad));
-    
-    r_enable = 0;
-    
- 	#10 $finish;
-  end
-  
-  always @e_sync if(r_enable) begin
-  	r_x <= w_x;
-    r_y <= w_y;
-    r_z <= w_z;
-    r_d <= w_d;
-    r_shift_amnt <= r_shift_amnt + 1;
-  end
-  
-  assign r_lut = r_lut_mem[r_shift_amnt];
-  
-  always #1 ->e_sync;
+    if(r_mode)
+      disp_state_frac(r_x, r_y, r_z);			// Show x, y in q.31 representation and z in degrees for circular mode
+    else
+      disp_state_frac_2(r_x, r_y, r_z);			// Show x, y in q3.28 representation and z in degrees for hyperbolic mode
 
+    if(r_mode)
+      $display("cos : %f, sine : %f", $cos(angle_rad), $sin(angle_rad));		// Show sine and cosine for circular mode
+    else
+      $display("cosh : %f, sinh : %f", $cosh(angle_rad), $sinh(angle_rad));		// Show sinh and cosh for hyperbolic mode
+    
+    r_enable = 0;								// Halt computation
+    
+ 	#10 $finish;								// Finish simulation
+  end
+  
 endmodule
 
 // Functions for converting between signed q.31 representation and -1 to 1 fraction
