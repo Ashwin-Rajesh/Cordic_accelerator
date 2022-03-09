@@ -9,7 +9,7 @@ fac         = 1         # To maintain multiplication factor to compensate
 
 for i in range(0, num_iter):
     if(i == 0):
-        print("32'h00000000")               # cant rotate for 0th iteration because arctan(1) = inf
+        print("32'h00000000")               # Cant rotate for 0th iteration because arctanh(1) = inf
     else:
         angle = np.arctanh(2**(-i))         # Get rotation angle for that iteration
         fac   = fac * np.cosh(angle)        # Get compensation factor for that iteration
