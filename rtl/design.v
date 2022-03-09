@@ -23,17 +23,21 @@ module cordic #(
   output reg signed [p_WIDTH-1:0] o_znext
 );
 
+  // Arithmetic right shift
   wire signed [p_WIDTH-1:0] w_xshifted = i_xprev >>> i_shift_amnt;
   wire signed [p_WIDTH-1:0] w_yshifted = i_yprev >>> i_shift_amnt;
-  
+
+  // Combinational datapath definition (currently not optimal for synthesis)
   always @(*) begin
     if(i_mode) begin
       // Circular mode
       if(i_dprev) begin
+        // Rotate by i_lut
         o_xnext = i_xprev - w_yshifted;
         o_ynext = i_yprev + w_xshifted;
         o_znext = i_zprev - i_lut;
       end else begin
+        // Rotate by -i_lut
         o_xnext = i_xprev + w_yshifted;
         o_ynext = i_yprev - w_xshifted;
         o_znext = i_zprev + i_lut;
@@ -41,10 +45,12 @@ module cordic #(
     end else begin
       // Hyperbolic mode
       if(i_dprev) begin
+        // Rotate by i_lut
         o_xnext = i_xprev + w_yshifted;
         o_ynext = i_yprev + w_xshifted;
         o_znext = i_zprev - i_lut;
       end else begin
+        // Rotate by -i_lut
         o_xnext = i_xprev - w_yshifted;
         o_ynext = i_yprev - w_xshifted;
         o_znext = i_zprev + i_lut;
