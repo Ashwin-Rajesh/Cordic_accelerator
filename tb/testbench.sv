@@ -41,7 +41,7 @@ module testbench;
   event e_sync;
 
   // Trigger CORDIC event
-  always #1 ->e_sync;
+  always #2 ->e_sync;
 
   // Controller logic for rotation
   always @e_sync if(r_enable) begin
@@ -63,8 +63,10 @@ module testbench;
     $dumpvars(0);
     $dumpfile("dump.vcd");
 	
+    @e_sync #1;
+    
     // Circular mode settings
-    /*
+    ///*
     // Set lookup table to tan inverse of 2^-i
     r_lut_mem = {
       32'h20000000,
@@ -89,8 +91,6 @@ module testbench;
       32'h00000517
     };
 	
-    @(e_sync);
-
     // CORDIC initial data inputs
     r_x = frac_to_hex(0.6072529350092496);		// Load the multiplication factor into x field (in q.31 representation)
     r_y = 0;									// Load 0 into y field
@@ -102,10 +102,10 @@ module testbench;
     r_shift_amnt = 0;							// Circular rotations must start from i = 0
     
     r_enable = 1;								// Start computation
-    */
+    //*/
     
     // Hyperbolic mode settings
-	///*
+	/*
     // Set lookup table to tanh inverse of 2^-i
     r_lut_mem = {
       32'h00000000,
@@ -130,10 +130,9 @@ module testbench;
       32'h00000517
     };
 
-	@(e_sync);
-    
     // CORDIC initial data inputs
     r_x = frac_to_hex2(1.2051363584457304);		// Load the multiplication factor into x field (in q3.28 representation)
+    $display(r_x);
     r_y = 0;									// Load 0 into y field
     r_z = degrees_to_hex(angle_deg);			// Load angle into z field (in q.31 representation)
 	
@@ -143,17 +142,15 @@ module testbench;
     r_shift_amnt = 1;							// Hyperbolic rotations must start with 1 (because arctanh(1) = inf)
     
     r_enable = 1;								// Start computation
-	//*/
-
-    #1;
-    
+	*/
+	
     // 20 iterations
     repeat(20) begin
       if(r_mode)
         disp_state_frac(r_x, r_y, r_z);			// Show x, y in q.31 representation and z in degrees for circular mode
       else
         disp_state_frac_2(r_x, r_y, r_z);		// Show x, y in q3.28 representation and z in degrees for hyperbolic mode
-      @(e_sync);								// Compute 1 iteration of CORDIC
+      @(e_sync) #1;								// Compute 1 iteration of CORDIC
     end
     
     if(r_mode)
