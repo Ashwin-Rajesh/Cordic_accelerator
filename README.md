@@ -1,5 +1,13 @@
 # Cordic_accelerator
-Accelerator IP for computing transcendental functions using CORDIC algorithm
+Accelerator IP for computing transcendental functions using CORDIC algorithm.
+
+As part of final year project for APJ Abdul Kalam Technological University B Tech Electronics and Communication Program.
+
+Department of Electronics and Communication Engineering
+
+Government Engineering College Thrissur
+
+
 
 ---
 
@@ -16,3 +24,13 @@ For synthesizable verilog code and testbench code thats not inside classes, use 
 | ```w_```| Wire
 | ```s_```| State definitions (as localparam)
 | ```e_```| Event
+
+## Contributors
+
+Harith Manoj <harithpub@gmail.com>
+
+Ashwin Rajesh
+
+Akin Mary
+
+Abhishek K
