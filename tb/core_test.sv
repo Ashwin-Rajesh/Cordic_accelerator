@@ -2,6 +2,7 @@
 `define CORE_TEST_SV
 
 `include "types.svh"
+`include "cordic_if.svh"
 
 // Display functions for CORDIC state (x, y, z)
 /*
@@ -45,30 +46,23 @@ module testbench;
   reg r_d 		= 1;  
   reg r_mode 	= 0;
   reg[4:0] r_shift_amnt = 0;
-  
-  // CORDIC LUT input
-  wire[31:0] r_lut;
-  
+    
   // CORDIC Lookup table
   reg[31:0] r_lut_mem[20];
 
-  // CORDIC outputs
-  wire[31:0] w_x;
-  wire[31:0] w_y;
-  wire[31:0] w_z;
+  cordic_if #(32) intf();
+
+  assign intf.xprev       = r_x;
+  assign intf.yprev       = r_y;
+  assign intf.zprev       = r_z;
+  
+  assign intf.dir         = r_d;
+  assign intf.mode        = r_mode;
+  assign intf.shift_amnt  = r_shift_amnt;
 
   // Initializing the CORDIC core
   cordic #(.p_WIDTH(32)) dut (
-    .i_xprev(r_x),
-    .i_yprev(r_y),
-    .i_zprev(r_z),
-    .i_dprev(r_d),
-    .i_mode(r_mode),
-    .i_lut(r_lut),
-    .i_shift_amnt(r_shift_amnt),
-    .o_xnext(w_x),
-    .o_ynext(w_y),
-    .o_znext(w_z)
+    intf.core
   );
 
   // For the control logic to function
@@ -82,15 +76,15 @@ module testbench;
 
   // Controller logic for rotation
   always @e_sync if(r_enable) begin
-  	r_x <= w_x;
-    r_y <= w_y;
-    r_z <= w_z;
-    r_d <= ~w_z[31];
+  	r_x <= intf.xnext;
+    r_y <= intf.ynext;
+    r_z <= intf.znext;
+    r_d <= ~intf.znext[31];
     r_shift_amnt <= r_shift_amnt + 1;
   end
   
   // Look up the LUT value for current iteration number (thats equal to the shift amount)
-  assign r_lut = r_lut_mem[r_shift_amnt];
+  assign intf.angle = r_lut_mem[r_shift_amnt];
 
   fixedpt_1 num1_x = new(0);
   fixedpt_1 num1_y = new(0);
