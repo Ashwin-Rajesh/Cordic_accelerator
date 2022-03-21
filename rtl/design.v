@@ -1,5 +1,5 @@
 module cordic #(
-  parameter 	p_WIDTH,
+  parameter 	p_WIDTH = 32,
   localparam 	p_LOG2_WIDTH = $clog2(p_WIDTH)
 ) (
   // Data inputs
