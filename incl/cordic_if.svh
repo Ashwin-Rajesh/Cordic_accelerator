@@ -1,5 +1,5 @@
-`ifndef DESIGN_IF_SVH
-`define DESIGN_IF_SVH
+`ifndef CORDIC_IF_SVH
+`define CORDIC_IF_SVH
 
 interface cordic_if #(
   parameter 	p_WIDTH = 32,
