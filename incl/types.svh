@@ -98,7 +98,19 @@ class angle #(int width = 32);
     num_type temp = new(inp / 180);
     return temp;
   endfunction
+  
+  static function real bin_to_deg(num_type::fixed_pt inp);
+    num_type temp = new();
+    temp.set_bin(inp);
+    return num_to_deg(temp);
+  endfunction
 
+  static function real bin_to_rad(num_type::fixed_pt inp);
+    num_type temp = new();
+    temp.set_bin(inp);
+    return num_to_rad(temp);
+  endfunction
+  
   function void pre_randomize();
     val_num.randomize();
   endfunction
