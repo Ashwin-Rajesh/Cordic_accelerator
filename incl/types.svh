@@ -80,6 +80,10 @@ class angle #(int width = 32);
     val_deg = num_to_deg(val_num);
     val_rad = num_to_rad(val_num);
   endfunction
+  
+  function num_type::fixed_pt val_bin();
+    return val_num.val_bin;
+  endfunction
 
   static function real num_to_rad(num_type inp);
     return inp.val * $acos(-1);
