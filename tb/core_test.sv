@@ -5,6 +5,7 @@
 `include "cordic_if.svh"
 `include "core_monitor.svh"
 `include "core_driver.svh"
+`include "core_sequencer.svh"
 
 typedef number #(32, 0) fixedpt_1;
 typedef number #(32, 3) fixedpt_2;
@@ -36,8 +37,8 @@ module testbench;
   reg[31:0] r_z = 0;
 
   // CORDIC control inputs
-  reg r_d 		= 1;  
-  reg r_mode 	= 1;
+  reg r_d 		= 1;  		// 0 for clockwise, 1 for counter-clockwise
+  reg r_mode 	= 1;		// 0 for hyperbolic, 1 for circular
   reg[4:0] r_shift_amnt = 0;
   
   // Controller logic variables
@@ -103,6 +104,8 @@ module testbench;
   core_monitor #(32, 0) monitor1 = new(intf.controller);	// For circular mode
   core_monitor #(32, 3) monitor2 = new(intf.controller);	// For hyperbolic mode
 
+  core_sequencer #(32, 0) seq1 = new(intf.controller);
+  
   // Initializing the CORDIC core
   cordic #(.p_WIDTH(32)) dut (
     intf.core
@@ -191,33 +194,36 @@ module testbench;
         z_exp = init_angle.val_deg + ($atan2(num1_y.val, num1_x.val) * 180 / $acos(-1));
       end
 	  r_x = num1_x.val_bin;
-      r_y = num1_y.val_bin;    
+      r_y = num1_y.val_bin;
+
+      r_shift_amnt = 0;
    	end else begin
       if(r_mode_control) begin
         $display("Hyperbolic rotation");
         // Hyperbolic rotation mode initial data settings
         num2_x.set_real(p_HYP_FACTOR);
         num2_y.set_real(0);
-        init_angle.set_deg(10);      
+        init_angle.set_deg(23);      
         
-        x_exp = 0;
-        y_exp = 0;
+        x_exp = (num2_x.val * $cosh(init_angle.val_rad) + num2_y.val * $sinh(init_angle.val_rad)) / p_HYP_FACTOR;
+        y_exp = (num2_y.val * $cosh(init_angle.val_rad) + num2_x.val * $sinh(init_angle.val_rad)) / p_HYP_FACTOR;
         z_exp = 0;
       end else begin
         $display("Hyperbolic vectoring");
         // Hyperbolic vectoring mode initial data settings
         num2_x.set_real(p_HYP_FACTOR);
         num2_y.set_real(p_HYP_FACTOR);
-        init_angle.set_deg(0);      
+        init_angle.set_deg(0);
+        
+        z_exp = init_angle.val_deg + ($atanh(num2_y.val / num2_x.val) * 180 / $acos(-1));
       end
       r_x = num2_x.val_bin;
       r_y = num2_y.val_bin;    
-   	end
+   	  
+      r_shift_amnt = 1;
+    end
 
     r_z = init_angle.val_num.val_bin;			// Load angle into z field (in q.31 representation)
-
-    r_shift_amnt = 0;							// Circular rotations must start from i = 0
-
 		
     @(e_sync) #1;
     
@@ -236,8 +242,11 @@ module testbench;
     $display("%f, %f, %f", x_exp, y_exp, z_exp);
     
     $display("Error :");
-    $display("%e, %e, %f deg", fixedpt_1::bin_to_real(r_x) - x_exp, fixedpt_1::bin_to_real(r_y) - y_exp, ang_type::bin_to_deg(r_z) - z_exp);
-    
+    if(r_mode)
+      $display("%e, %e, %f deg", fixedpt_1::bin_to_real(r_x) - x_exp, fixedpt_1::bin_to_real(r_y) - y_exp, ang_type::bin_to_deg(r_z) - z_exp);
+    else
+      $display("%e, %e, %f deg", fixedpt_2::bin_to_real(r_x) - x_exp, fixedpt_2::bin_to_real(r_y) - y_exp, ang_type::bin_to_deg(r_z) - z_exp);
+      
     r_enable = 0;								// Halt computation
     
  	#10 $finish;								// Finish simulation
