@@ -63,7 +63,7 @@ class core_sequencer #(parameter width =  32, parameter int_width = 0);
     2.1344341156289847e-07,
     1.0672170578144923e-07,
     5.336085289072462e-08,
-    2.668042644536231e-08,
+    2.668042644536231e-08,		// Zero
     1.3340213222681154e-08,
     6.670106611340577e-09,
     3.3350533056702886e-09,
@@ -116,7 +116,7 @@ class core_sequencer #(parameter width =  32, parameter int_width = 0);
     2.1344341156289847e-07,
     1.0672170578144923e-07,
     5.336085289072462e-08,
-    2.668042644536231e-08,
+    2.668042644536231e-08,		// Zero
     1.3340213222681154e-08,
     6.670106611340577e-09,
     3.3350533056702886e-09,
@@ -200,7 +200,7 @@ class core_sequencer #(parameter width =  32, parameter int_width = 0);
   	mode = inp;
   endfunction
   
-  function void next_iter();
+  function bit next_iter();
     intf.xprev = intf.xnext;
     intf.yprev = intf.ynext;
     intf.zprev = intf.znext;
@@ -220,7 +220,8 @@ class core_sequencer #(parameter width =  32, parameter int_width = 0);
       intf.angle      = atan_lut[intf.shift_amnt].val_bin();
     else
       intf.angle      = atanh_lut[intf.shift_amnt].val_bin();
-
+    
+    return monitor.sample();
   endfunction
 endclass
 
