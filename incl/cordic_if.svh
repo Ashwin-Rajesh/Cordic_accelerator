@@ -20,18 +20,25 @@ interface cordic_if #(
   logic signed [p_WIDTH-1:0] 	xnext;
   logic signed [p_WIDTH-1:0] 	ynext;
   logic signed [p_WIDTH-1:0] 	znext;
+  
+  // Flag outputs
+  logic 						xOverflow;
+  logic 						yOverflow;
+  logic 						zOverflow;
 
   // modport on CORDIC core or compute unit side
   modport core(
     input 	xprev, yprev, zprev,			// Data inputs 
     input 	dir, mode, angle, shift_amnt,	// Control inputs
-    output 	xnext, ynext, znext				// Data outputs
+    output 	xnext, ynext, znext,			// Data outputs
+    output  xOverflow, yOverflow, zOverflow // Flag outputs
   );
   // modport on the controller side
   modport controller(
     output 	xprev, yprev, zprev,			// Data inputs 
     output 	dir, mode, angle, shift_amnt,	// Control inputs
-    input 	xnext, ynext, znext				// Data outputs
+    input 	xnext, ynext, znext,			// Data outputs
+    input   xOverflow, yOverflow, zOverflow // Flag outputs
   );
 endinterface
 
