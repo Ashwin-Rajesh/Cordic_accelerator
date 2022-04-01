@@ -11,24 +11,6 @@ typedef number #(32, 0) fixedpt_1;
 typedef number #(32, 3) fixedpt_2;
 typedef angle #(32) 	ang_type;
 
-// Display functions for CORDIC state (x, y, z)
-function string disp_state_frac(bit[31:0] x, bit[31:0] y, bit[31:0] z);
-  $display("%f, %f, %f", fixedpt_1::bin_to_real(x), fixedpt_1::bin_to_real(y), ang_type::bin_to_deg(z));
-endfunction
-
-function string disp_state_frac_2(bit[31:0] x, bit[31:0] y, bit[31:0] z);
-  $display("%f, %f, %f", fixedpt_2::bin_to_real(x), fixedpt_2::bin_to_real(y), ang_type::bin_to_deg(z));
-endfunction
-
-// Display functions using number
-function string disp_state_1(fixedpt_1 x, fixedpt_1 y, ang_type z);
-  $display("%f, %f, %f", x.val, y.val, z.val_deg);
-endfunction
-
-function string disp_state_2(fixedpt_2 x, fixedpt_2 y, ang_type z);
-  $display("%f, %f, %f", x.val, y.val, z.val_deg);
-endfunction
-
 // Main testbench
 module testbench;
   real p_CIRC_FACTOR = 0.6072529350092496;
@@ -81,8 +63,8 @@ module testbench;
     r_mode = 1;			// Circular mode
     //r_mode = 0;		// Hyperbolic mode
     
-    r_mode_control = 1;	// Rotation mode
-    //r_mode_control = 0;	// Vectoring mode
+    //r_mode_control = 1;	// Rotation mode
+    r_mode_control = 0;	// Vectoring mode
     
     if(r_mode) begin
       if(r_mode_control) begin
@@ -124,10 +106,12 @@ module testbench;
       end else begin
         $display("Hyperbolic vectoring");
         // Hyperbolic vectoring mode initial data settings
-        num2_x.set_real(p_HYP_FACTOR);
-        num2_y.set_real(p_HYP_FACTOR);
+        num2_x.set_real(1);
+        num2_y.set_real(0.5);
         init_angle.set_deg(0);
         
+        x_exp = $sqrt(num2_x.val ** 2 - num2_y.val ** 2) / p_HYP_FACTOR;
+        y_exp = 0;
         z_exp = init_angle.val_deg + ($atanh(num2_y.val / num2_x.val) * 180 / $acos(-1));
       end
       seq2.set_system(r_mode);
@@ -138,22 +122,33 @@ module testbench;
 
     #1;
     
-    // 20 iterations
-    repeat(25) begin
+    // Perform CORDIC iterations (rotation/vectoring)
+    for(int i = 0; i < 25; i++) begin
       if(r_mode) begin
-        $display("%f, %f, %f", seq1.x_num.val, seq1.y_num.val, seq1.z_ang.val_deg);
-        seq1.next_iter();
+        $display("%8d : %10f, %10f, %10f", i, seq1.x_num.val, seq1.y_num.val, seq1.z_ang.val_deg);
+        if(seq1.next_iter()) begin
+          $display("Overflow detected after iteration %2d", i);
+          break;
+        end
       end else begin
-        $display("%f, %f, %f", seq2.x_num.val, seq2.y_num.val, seq2.z_ang.val_deg);
-        seq2.next_iter();
+        $display("%8d : %10f, %10f, %10f", i, seq2.x_num.val, seq2.y_num.val, seq2.z_ang.val_deg);
+        if(seq2.next_iter()) begin
+          $display("Overflow detected after iteration %2d", i);
+          break;
+        end
       end
-    
 	  #1;
     end
-	
+
+    // Display final CORDIC state
+    if(r_mode) begin
+      $display("Final    : %10f, %10f, %10f", seq1.x_num.val, seq1.y_num.val, seq1.z_ang.val_deg);
+    end else begin
+      $display("Final    : %10f, %10f, %10f", seq2.x_num.val, seq2.y_num.val, seq2.z_ang.val_deg);
+    end
+    
     // Compare with expected results
-    $display("Expected results :");
-    $display("%f, %f, %f", x_exp, y_exp, z_exp);
+    $display("Expected : %10f, %10f, %10f", x_exp, y_exp, z_exp);
     
     $display("Error :");
     if(r_mode)
