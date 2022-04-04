@@ -33,12 +33,13 @@ For synthesizable verilog code and testbench code thats not inside classes, use 
 | ``` `define``` macro  | *UPPERCASE*
 | Parameters            | *UPPERCASE*
 
+Indentation must be done using spaces, with 2 spaces for each level
+
+---
+
 ## Contributors
 
-Harith Manoj <harithpub@gmail.com>
-
-Ashwin Rajesh
-
-Akin Mary
-
-Abhishek K
+- *Harith Manoj* <harithpub@gmail.com>
+- *Ashwin Rajesh*
+- *Akin Mary*
+- *Abhishek K*
