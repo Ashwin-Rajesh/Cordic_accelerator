@@ -211,7 +211,7 @@ class CoreSequencer #(parameter width =  32, parameter int_width = 0);
     
     intf.shiftAmount = intf.shiftAmount + 1;
   
-    if(mode)
+    if(controlMode)
       intf.rotationDir        = ~intf.zPrev[width-1];
     else
       intf.rotationDir        = intf.yPrev[width-1];
