@@ -6,32 +6,32 @@
 `include "core_driver.svh"
 `include "core_monitor.svh"
 
-class core_sequencer #(parameter width =  32, parameter int_width = 0);  
-  typedef Number #(width, int_width) fixed_pt;		// qn.m fixed point notation, n is integer width and m = width - int_width - 1
-  typedef Angle #(width) 	  ang_type;				// Angle in q.m representation, m = width, with 1 representing 180 degrees, -1 representing -180 degrees 
+class CoreSequencer #(parameter width =  32, parameter int_width = 0);  
+  typedef Number #(width, int_width)  NumType;      // qn.m fixed point notation, n is integer width and m = width - int_width - 1
+  typedef Angle #(width) 	            AngType;      // Angle in q.m representation, m = width, with 1 representing 180 degrees, -1 representing -180 degrees 
   
-  core_monitor #(32, 0) monitor;
+  CoreMonitor #(32, 0) monitor;
   
   // CORDIC data inputs
-  fixed_pt x_num;			// x value
-  fixed_pt y_num;			// y value
-  ang_type z_ang;			// angle value
+  NumType xNum;			// x value
+  NumType yNum;			// y value
+  AngType zAng;			// angle value
 
-  bit[width-1:0] r_x;
-  bit[width-1:0] r_y;
-  bit[width-1:0] r_z;
+  bit[width-1:0] r_xBin;
+  bit[width-1:0] r_yBin;
+  bit[width-1:0] r_zBin;
   
   // CORDIC control inputs
-  bit system;				// 1 for circular, 0 for hyperbolic
-  bit mode;					// 1 for rotation, 0 for vectoring
+  bit rotationSystem;				// 1 for circular, 0 for hyperbolic
+  bit controlMode;					// 1 for rotation, 0 for vectoring
   
   // Lookup tables
-  ang_type atan_lut[$];
-  ang_type atanh_lut[$];
+  AngType arctanLUT[$];
+  AngType arctanhLUT[$];
   
   virtual CordicInterface.controller intf;
   
-  static real atan_lut_real[] = {
+  static real arctanLUT_real[] = {
     45.0,
     26.56505117707799,
     14.036243467926477,
@@ -84,7 +84,7 @@ class core_sequencer #(parameter width =  32, parameter int_width = 0);
     1.0177774980683254e-13
   };
   
-  static real atanh_lut_real[] = {
+  static real arctanhLUT_real[] = {
     0,
     31.47292373094538,
     14.634076154464474,
@@ -137,77 +137,77 @@ class core_sequencer #(parameter width =  32, parameter int_width = 0);
     1.0177774980683254e-13
   };
     
-  ang_type temp;
+  AngType temp;
 
-  function new(virtual CordicInterface.controller inp_intf);
+  function new(virtual CordicInterface.controller inpIntf);
     // Initialize internal variables
-    x_num = new(0);
-    y_num = new(0);
-    z_ang = new(0);
+    xNum = new(0);
+    yNum = new(0);
+    zAng = new(0);
   
-    r_x   = 0;
-    r_y   = 0;
-    r_z   = 0;
+    r_xBin   = 0;
+    r_yBin   = 0;
+    r_zBin   = 0;
     
-	system = 0;
-    mode  = 0;
+	  rotationSystem  = 0;
+    controlMode     = 0;
 
-    intf  = inp_intf;   
+    intf  = inpIntf;   
 
-    intf.rotationSystem = system;
+    intf.rotationSystem = rotationSystem;
     
     monitor = new(intf);
     
-    for(int i = 0; i < atan_lut_real.size(); i++) begin
-      temp = new(atan_lut_real[i]);
-      atan_lut.push_back(temp);
-      temp = new(atanh_lut_real[i]);
-      atanh_lut.push_back(temp);
+    for(int i = 0; i < arctanLUT_real.size(); i++) begin
+      temp = new(arctanLUT_real[i]);
+      arctanLUT.push_back(temp);
+      temp = new(arctanhLUT_real[i]);
+      arctanhLUT.push_back(temp);
     end
   endfunction
   
-  function bit reset(real x_val, real y_val, real z_val);
+  function bit reset(real xInp, real yInp, real zInp);
   	// Set internal variables
-    x_num.setReal(x_val);
-    y_num.setReal(y_val);
-    z_ang.setDeg(z_val);
+    xNum.setReal(xInp);
+    yNum.setReal(yInp);
+    zAng.setDeg(zInp);
     
-    intf.xPrev = x_num.binVal;
-    intf.yPrev = y_num.binVal;
-    intf.zPrev = z_ang.getBin();
+    intf.xPrev = xNum.binVal;
+    intf.yPrev = yNum.binVal;
+    intf.zPrev = zAng.getBin();
     
-    if(mode)
+    if(controlMode)
       intf.rotationDir        = ~intf.zPrev[width-1];
     else
       intf.rotationDir        = intf.yPrev[width-1];
 
-    if(system) begin
+    if(rotationSystem) begin
       intf.shiftAmount   = 0;
-      intf.rotationAngle = atan_lut[intf.shiftAmount].getBin();
+      intf.rotationAngle = arctanLUT[intf.shiftAmount].getBin();
     end else begin
       intf.shiftAmount   = 1;
-      intf.rotationAngle = atanh_lut[intf.shiftAmount].getBin();
+      intf.rotationAngle = arctanhLUT[intf.shiftAmount].getBin();
     end
     
-    intf.rotationSystem  = system;
+    intf.rotationSystem  = rotationSystem;
   endfunction
   
-  function bit set_system(bit inp);
-  	system = inp;
+  function bit setRotationSystem(bit inp);
+  	rotationSystem = inp;
   endfunction
   
-  function bit set_mode(bit inp);
-  	mode = inp;
+  function bit setControlMode(bit inp);
+  	controlMode = inp;
   endfunction
   
-  function bit next_iter();
+  function bit iterate();
     intf.xPrev = intf.xResult;
     intf.yPrev = intf.yResult;
     intf.zPrev = intf.zResult;
   	
-    x_num.setBin(intf.xPrev);
-    y_num.setBin(intf.yPrev);
-    z_ang.setBin(intf.zPrev);
+    xNum.setBin(intf.xPrev);
+    yNum.setBin(intf.yPrev);
+    zAng.setBin(intf.zPrev);
     
     intf.shiftAmount = intf.shiftAmount + 1;
   
@@ -216,10 +216,10 @@ class core_sequencer #(parameter width =  32, parameter int_width = 0);
     else
       intf.rotationDir        = intf.yPrev[width-1];
       
-    if(system)
-      intf.rotationAngle      = atan_lut[intf.shiftAmount].getBin();
+    if(rotationSystem)
+      intf.rotationAngle      = arctanLUT[intf.shiftAmount].getBin();
     else
-      intf.rotationAngle      = atanh_lut[intf.shiftAmount].getBin();
+      intf.rotationAngle      = arctanhLUT[intf.shiftAmount].getBin();
     
     return monitor.sample();
   endfunction

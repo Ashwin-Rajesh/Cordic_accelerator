@@ -14,31 +14,28 @@ module testbench;
   localparam real p_HYP_FACTOR = 1.2051363584457304;
   
   localparam bit p_SYSTEM = 0;				// 1 : Circular,   	0 : Hyperbolic
-  localparam bit p_MODE = 1;				// 1 : Rotation, 	0 : Vectoring
+  localparam bit p_MODE = 1;				  // 1 : Rotation, 	0 : Vectoring
   
   localparam p_INT_BITS = p_SYSTEM ? 0 : 3; // Number of bits for integer part
 
   localparam p_LOG_TESTS = 0;
   localparam p_LOG_ITER  = 0;
 
-  typedef Number #(32, p_INT_BITS)  num_type;
-  typedef Angle #(32) 	            ang_type;
+  typedef Number #(32, p_INT_BITS)  NumType;
+  typedef Angle #(32) 	            AngType;
 
   // CORDIC-controller interface
   CordicInterface #(32) intf();
   
-  core_monitor #(32, p_INT_BITS) mon 	= new(intf.controller);
-  
-  core_sequencer #(32, p_INT_BITS) seq	= new(intf.controller);
+  CoreMonitor   #(32, p_INT_BITS) monitor 	  = new(intf.controller);  
+  CoreSequencer #(32, p_INT_BITS) sequencer	  = new(intf.controller);
     
   // Initializing the CORDIC core
-  cordic #(.p_WIDTH(32)) dut (
-    intf.core
-  );
+  cordic        #(.p_WIDTH(32)) dut           (intf.core);
 
-  num_type init_x     = new(0);   // Initial y value
-  num_type init_y     = new(0);   // Initial x value
-  ang_type init_angle = new(0);		// Initial angle value
+  NumType init_x     = new(0);   // Initial y value
+  NumType init_y     = new(0);   // Initial x value
+  AngType init_angle = new(0);		// Initial angle value
   
   real exp_x, exp_y, exp_z;       // Expected output values
   
@@ -175,37 +172,37 @@ module testbench;
         end     
       end
 
-	  if(exp_x > num_type::maxRealVal || exp_x < num_type::minRealVal  || exp_y > num_type::maxRealVal || exp_y < num_type::minRealVal) begin
+	  if(exp_x > NumType::maxRealVal || exp_x < NumType::minRealVal  || exp_y > NumType::maxRealVal || exp_y < NumType::minRealVal) begin
         if(p_LOG_TESTS) $display("Expected value will overflow");
         iter1--;
         continue;
       end
       
-      seq.set_system(p_SYSTEM);
-      seq.set_mode(p_MODE);
-      seq.reset(init_x.realVal, init_y.realVal, init_angle.degVal);   
+      sequencer.setRotationSystem(p_SYSTEM);
+      sequencer.setControlMode(p_MODE);
+      sequencer.reset(init_x.realVal, init_y.realVal, init_angle.degVal);   
 
       #10;
 
       // Perform CORDIC iterations (rotation/vectoring)
       for(int iter2 = 0; iter2 < 15; iter2++) begin
-        if(p_LOG_ITER) $display("%8d : %10f, %10f, %10f", iter2, seq.x_num.realVal, seq.y_num.realVal, seq.z_ang.degVal);
-        if(seq.next_iter()) begin
+        if(p_LOG_ITER) $display("%8d : %10f, %10f, %10f", iter2, sequencer.xNum.realVal, sequencer.yNum.realVal, sequencer.zAng.degVal);
+        if(sequencer.iterate()) begin
           if(p_LOG_TESTS) $display("Overflow detected after iteration %2d", iter2);
           overflow = 1;
-          // assert(exp_x > num_type::maxRealVal || exp_x < num_type::minRealVal  || exp_y > num_type::maxRealVal || exp_y < num_type::minRealVal);
+          // assert(exp_x > NumType::maxRealVal || exp_x < NumType::minRealVal  || exp_y > NumType::maxRealVal || exp_y < NumType::minRealVal);
           break;
         end
         #1;
       end
 
       // Display final CORDIC state
-      if(p_LOG_TESTS) $display("Final    : %10f, %10f, %10f", seq.x_num.realVal, seq.y_num.realVal, seq.z_ang.degVal);
+      if(p_LOG_TESTS) $display("Final    : %10f, %10f, %10f", sequencer.xNum.realVal, sequencer.yNum.realVal, sequencer.zAng.degVal);
       
       // Compare with expected results
       if(p_LOG_TESTS) $display("Expected : %10f, %10f, %10f", exp_x, exp_y, exp_z);
 
-      if(p_LOG_TESTS) $display("Error    : %e, %e, %f deg", seq.x_num.realVal - exp_x, seq.y_num.realVal - exp_y, seq.z_ang.degVal - exp_z);
+      if(p_LOG_TESTS) $display("Error    : %e, %e, %f deg", sequencer.xNum.realVal - exp_x, sequencer.yNum.realVal - exp_y, sequencer.zAng.degVal - exp_z);
             
       xInitHist.push_back(init_x.realVal);
       yInitHist.push_back(init_y.realVal);
@@ -215,9 +212,9 @@ module testbench;
       yExpHist.push_back(exp_y);
       zExpHist.push_back(exp_z);
             
-      xErrorHist.push_back($abs(seq.x_num.realVal     - exp_x));
-      yErrorHist.push_back($abs(seq.y_num.realVal     - exp_y));
-      zErrorHist.push_back($abs(seq.z_ang.degVal - exp_z));
+      xErrorHist.push_back($abs(sequencer.xNum.realVal     - exp_x));
+      yErrorHist.push_back($abs(sequencer.yNum.realVal     - exp_y));
+      zErrorHist.push_back($abs(sequencer.zAng.degVal - exp_z));
 
       validHist.push_back(~overflow);
       idxHist.push_back(iter1);
