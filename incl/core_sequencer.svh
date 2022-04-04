@@ -29,7 +29,7 @@ class core_sequencer #(parameter width =  32, parameter int_width = 0);
   ang_type atan_lut[$];
   ang_type atanh_lut[$];
   
-  virtual cordic_if.controller intf;
+  virtual CordicInterface.controller intf;
   
   static real atan_lut_real[] = {
     45.0,
@@ -63,7 +63,7 @@ class core_sequencer #(parameter width =  32, parameter int_width = 0);
     2.1344341156289847e-07,
     1.0672170578144923e-07,
     5.336085289072462e-08,
-    2.668042644536231e-08,		// Zero
+    2.668042644536231e-08,		// Zero in binary
     1.3340213222681154e-08,
     6.670106611340577e-09,
     3.3350533056702886e-09,
@@ -116,7 +116,7 @@ class core_sequencer #(parameter width =  32, parameter int_width = 0);
     2.1344341156289847e-07,
     1.0672170578144923e-07,
     5.336085289072462e-08,
-    2.668042644536231e-08,		// Zero
+    2.668042644536231e-08,		// Zero in binary
     1.3340213222681154e-08,
     6.670106611340577e-09,
     3.3350533056702886e-09,
@@ -139,7 +139,7 @@ class core_sequencer #(parameter width =  32, parameter int_width = 0);
     
   ang_type temp;
 
-  function new(virtual cordic_if.controller inp_intf);
+  function new(virtual CordicInterface.controller inp_intf);
     // Initialize internal variables
     x_num = new(0);
     y_num = new(0);
@@ -154,7 +154,7 @@ class core_sequencer #(parameter width =  32, parameter int_width = 0);
 
     intf  = inp_intf;   
 
-    intf.mode = system;
+    intf.rotationSystem = system;
     
     monitor = new(intf);
     
@@ -172,24 +172,24 @@ class core_sequencer #(parameter width =  32, parameter int_width = 0);
     y_num.set_real(y_val);
     z_ang.set_deg(z_val);
     
-    intf.xprev = x_num.val_bin;
-    intf.yprev = y_num.val_bin;
-    intf.zprev = z_ang.val_bin;
+    intf.xPrev = x_num.val_bin;
+    intf.yPrev = y_num.val_bin;
+    intf.zPrev = z_ang.val_bin;
     
     if(mode)
-      intf.dir        = ~intf.zprev[width-1];
+      intf.rotationDir        = ~intf.zPrev[width-1];
     else
-      intf.dir        = intf.yprev[width-1];
+      intf.rotationDir        = intf.yPrev[width-1];
 
     if(system) begin
-      intf.shift_amnt = 0;
-      intf.angle      = atan_lut[intf.shift_amnt].val_bin();
+      intf.shiftAmount   = 0;
+      intf.rotationAngle = atan_lut[intf.shiftAmount].val_bin();
     end else begin
-      intf.shift_amnt = 1;
-      intf.angle      = atanh_lut[intf.shift_amnt].val_bin();
+      intf.shiftAmount   = 1;
+      intf.rotationAngle = atanh_lut[intf.shiftAmount].val_bin();
     end
     
-    intf.mode = system;
+    intf.rotationSystem  = system;
   endfunction
   
   function bit set_system(bit inp);
@@ -201,25 +201,25 @@ class core_sequencer #(parameter width =  32, parameter int_width = 0);
   endfunction
   
   function bit next_iter();
-    intf.xprev = intf.xnext;
-    intf.yprev = intf.ynext;
-    intf.zprev = intf.znext;
+    intf.xPrev = intf.xResult;
+    intf.yPrev = intf.yResult;
+    intf.zPrev = intf.zResult;
   	
-    x_num.set_bin(intf.xprev);
-    y_num.set_bin(intf.yprev);
-    z_ang.set_bin(intf.zprev);
+    x_num.set_bin(intf.xPrev);
+    y_num.set_bin(intf.yPrev);
+    z_ang.set_bin(intf.zPrev);
     
-    intf.shift_amnt = intf.shift_amnt + 1;
+    intf.shiftAmount = intf.shiftAmount + 1;
   
     if(mode)
-      intf.dir        = ~intf.zprev[width-1];
+      intf.rotationDir        = ~intf.zPrev[width-1];
     else
-      intf.dir        = intf.yprev[width-1];
+      intf.rotationDir        = intf.yPrev[width-1];
       
     if(system)
-      intf.angle      = atan_lut[intf.shift_amnt].val_bin();
+      intf.rotationAngle      = atan_lut[intf.shiftAmount].val_bin();
     else
-      intf.angle      = atanh_lut[intf.shift_amnt].val_bin();
+      intf.rotationAngle      = atanh_lut[intf.shiftAmount].val_bin();
     
     return monitor.sample();
   endfunction

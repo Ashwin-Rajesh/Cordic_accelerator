@@ -16,9 +16,9 @@ class core_driver #(parameter width =  32, parameter int_width = 0);
   // CORDIC control inputs
   bit mode;
   
-  virtual cordic_if.controller intf;
+  virtual CordicInterface.controller intf;
   
-  function new(virtual cordic_if.controller inp_intf);
+  function new(virtual CordicInterface.controller inp_intf);
     // Initialize internal variables
     x_num = new(0);
     y_num = new(0);
@@ -45,14 +45,14 @@ class core_driver #(parameter width =  32, parameter int_width = 0);
   endfunction
   
   function bit drive(int unsigned shift_amnt, ang_type angle, bit dir);
-  	intf.xprev = x_num.val_bin;
-    intf.yprev = y_num.val_bin;
-    intf.zprev = z_ang.val_bin;
+  	intf.xPrev = x_num.val_bin;
+    intf.yPrev = y_num.val_bin;
+    intf.zPrev = z_ang.val_num.val_bin;
   
-    intf.angle = angle.val_num.val_bin;
-    intf.dir   = dir;
-    intf.mode  = mode;
-    intf.shift_amnt = shift_amnt;
+    intf.rotationAngle = angle.val_num.val_bin;
+    intf.rotationDir   = dir;
+    intf.rotationSystem  = mode;
+    intf.shiftAmount = shift_amnt;
   endfunction
 endclass
 

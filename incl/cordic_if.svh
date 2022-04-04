@@ -1,25 +1,25 @@
 `ifndef CORDIC_IF_SVH
 `define CORDIC_IF_SVH
 
-interface cordic_if #(
+interface CordicInterface #(
   parameter 	p_WIDTH = 32,
   localparam 	p_LOG2_WIDTH = $clog2(p_WIDTH)
 );
   // Data inputs
-  logic signed [p_WIDTH - 1:0] 	xprev;
-  logic signed [p_WIDTH - 1:0] 	yprev;
-  logic signed [p_WIDTH - 1:0] 	zprev;
+  logic signed [p_WIDTH - 1:0] 	xPrev;
+  logic signed [p_WIDTH - 1:0] 	yPrev;
+  logic signed [p_WIDTH - 1:0] 	zPrev;
 
   // Control inputs
-  logic 						dir;
-  logic 						mode;
-  logic[p_WIDTH - 1:0] 			angle;
-  logic[p_LOG2_WIDTH-1:0] 		shift_amnt;
+  logic 						rotationDir;
+  logic 						rotationSystem;
+  logic[p_WIDTH - 1:0] 			rotationAngle;
+  logic[p_LOG2_WIDTH-1:0] 		shiftAmount;
 
   // Data outputs
-  logic signed [p_WIDTH-1:0] 	xnext;
-  logic signed [p_WIDTH-1:0] 	ynext;
-  logic signed [p_WIDTH-1:0] 	znext;
+  logic signed [p_WIDTH-1:0] 	xResult;
+  logic signed [p_WIDTH-1:0] 	yResult;
+  logic signed [p_WIDTH-1:0] 	zResult;
   
   // Flag outputs
   logic 						xOverflow;
@@ -28,16 +28,16 @@ interface cordic_if #(
 
   // modport on CORDIC core or compute unit side
   modport core(
-    input 	xprev, yprev, zprev,			// Data inputs 
-    input 	dir, mode, angle, shift_amnt,	// Control inputs
-    output 	xnext, ynext, znext,			// Data outputs
+    input 	xPrev, yPrev, zPrev,			      // Data inputs 
+    input 	rotationDir, rotationSystem, rotationAngle, shiftAmount,	// Control inputs
+    output 	xResult, yResult, zResult,			// Data outputs
     output  xOverflow, yOverflow, zOverflow // Flag outputs
   );
   // modport on the controller side
   modport controller(
-    output 	xprev, yprev, zprev,			// Data inputs 
-    output 	dir, mode, angle, shift_amnt,	// Control inputs
-    input 	xnext, ynext, znext,			// Data outputs
+    output 	xPrev, yPrev, zPrev,			      // Data inputs 
+    output 	rotationDir, rotationSystem, rotationAngle, shiftAmount,	// Control inputs
+    input 	xResult, yResult, zResult,			// Data outputs
     input   xOverflow, yOverflow, zOverflow // Flag outputs
   );
 endinterface

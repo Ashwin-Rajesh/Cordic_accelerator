@@ -17,9 +17,9 @@ class core_monitor #(parameter width =  32, parameter int_width = 0);
   bit yOverflow;
   bit zOverflow;
   
-  virtual cordic_if.controller intf;
+  virtual CordicInterface.controller intf;
   
-  function new(virtual cordic_if.controller inp_intf);
+  function new(virtual CordicInterface.controller inp_intf);
     // Initialize internal variables
     x_num = new(0);
     y_num = new(0);
@@ -28,14 +28,14 @@ class core_monitor #(parameter width =  32, parameter int_width = 0);
   endfunction
   
   function bit sample();
-    x_num.set_bin(intf.xnext);
-    y_num.set_bin(intf.ynext);
-    z_ang.set_bin(intf.znext);
+    x_num.set_bin(intf.xResult);
+    y_num.set_bin(intf.yResult);
+    z_ang.set_bin(intf.zResult);
     
-	xOverflow = intf.xOverflow;    
-	yOverflow = intf.yOverflow;    
-	zOverflow = intf.zOverflow;    
-    
+	  xOverflow = intf.xOverflow;    
+    yOverflow = intf.yOverflow;    
+    zOverflow = intf.zOverflow;    
+      
     return (xOverflow || yOverflow || zOverflow);
   endfunction
 endclass

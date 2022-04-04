@@ -13,7 +13,7 @@ module testbench;
 
   localparam real p_HYP_FACTOR = 1.2051363584457304;
   
-  localparam bit p_SYSTEM = 1;				// 1 : Circular,   	0 : Hyperbolic
+  localparam bit p_SYSTEM = 0;				// 1 : Circular,   	0 : Hyperbolic
   localparam bit p_MODE = 1;				// 1 : Rotation, 	0 : Vectoring
   
   localparam p_INT_BITS = p_SYSTEM ? 0 : 3; // Number of bits for integer part
@@ -25,7 +25,7 @@ module testbench;
   typedef angle #(32) 	            ang_type;
 
   // CORDIC-controller interface
-  cordic_if #(32) intf();
+  CordicInterface #(32) intf();
   
   core_monitor #(32, p_INT_BITS) mon 	= new(intf.controller);
   
@@ -71,9 +71,8 @@ module testbench;
     end
     
 	// Run the tests
-    for(int iter1 = 0; iter1 < 250; iter1++) begin
-	  #10;
-    
+    for(int iter1 = 0; iter1 < 2500; iter1++) begin
+      
       if(p_LOG_TESTS) begin
         $display("----------------------------------------");
         $display(" Test no : %d", iter1);
@@ -148,12 +147,6 @@ module testbench;
             if(p_LOG_TESTS) $display("abs(expected ang) < 99 for circular rotation");
             iter1--;
             continue;
-          end  
-          
-          if(exp_x > num_type::max_val_real || exp_x < num_type::min_val_real  || exp_y > num_type::max_val_real || exp_y < num_type::min_val_real) begin
-            if(p_LOG_TESTS) $display("Expected value will overflow");
-            iter1--;
-            continue;
           end
 		end      
       end else begin
@@ -182,14 +175,20 @@ module testbench;
         end     
       end
 
+	  if(exp_x > num_type::max_val_real || exp_x < num_type::min_val_real  || exp_y > num_type::max_val_real || exp_y < num_type::min_val_real) begin
+        if(p_LOG_TESTS) $display("Expected value will overflow");
+        iter1--;
+        continue;
+      end
+      
       seq.set_system(p_SYSTEM);
       seq.set_mode(p_MODE);
       seq.reset(init_x.val, init_y.val, init_angle.val_deg);   
 
-      #1;
+      #10;
 
       // Perform CORDIC iterations (rotation/vectoring)
-      for(int iter2 = 0; iter2 < 25; iter2++) begin
+      for(int iter2 = 0; iter2 < 15; iter2++) begin
         if(p_LOG_ITER) $display("%8d : %10f, %10f, %10f", iter2, seq.x_num.val, seq.y_num.val, seq.z_ang.val_deg);
         if(seq.next_iter()) begin
           if(p_LOG_TESTS) $display("Overflow detected after iteration %2d", iter2);
