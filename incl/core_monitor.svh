@@ -5,8 +5,8 @@
 `include "cordic_if.svh"
 
 class core_monitor #(parameter width =  32, parameter int_width = 0);
-  typedef number #(width, int_width) fixed_pt;		// qn.m fixed point notation, n is integer width and m = width - int_width - 1
-  typedef angle #(width) 	  ang_type;				// Angle in q.m representation, m = width, with 1 representing 180 degrees, -1 representing -180 degrees 
+  typedef Number #(width, int_width) fixed_pt;		// qn.m fixed point notation, n is integer width and m = width - int_width - 1
+  typedef Angle #(width) 	  ang_type;				// Angle in q.m representation, m = width, with 1 representing 180 degrees, -1 representing -180 degrees 
   
   // CORDIC data inputs
   fixed_pt x_num;			// x value
@@ -28,9 +28,9 @@ class core_monitor #(parameter width =  32, parameter int_width = 0);
   endfunction
   
   function bit sample();
-    x_num.set_bin(intf.xResult);
-    y_num.set_bin(intf.yResult);
-    z_ang.set_bin(intf.zResult);
+    x_num.setBin(intf.xResult);
+    y_num.setBin(intf.yResult);
+    z_ang.setBin(intf.zResult);
     
 	  xOverflow = intf.xOverflow;    
     yOverflow = intf.yOverflow;    

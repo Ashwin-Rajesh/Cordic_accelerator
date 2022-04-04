@@ -7,8 +7,8 @@
 `include "core_monitor.svh"
 
 class core_sequencer #(parameter width =  32, parameter int_width = 0);  
-  typedef number #(width, int_width) fixed_pt;		// qn.m fixed point notation, n is integer width and m = width - int_width - 1
-  typedef angle #(width) 	  ang_type;				// Angle in q.m representation, m = width, with 1 representing 180 degrees, -1 representing -180 degrees 
+  typedef Number #(width, int_width) fixed_pt;		// qn.m fixed point notation, n is integer width and m = width - int_width - 1
+  typedef Angle #(width) 	  ang_type;				// Angle in q.m representation, m = width, with 1 representing 180 degrees, -1 representing -180 degrees 
   
   core_monitor #(32, 0) monitor;
   
@@ -168,13 +168,13 @@ class core_sequencer #(parameter width =  32, parameter int_width = 0);
   
   function bit reset(real x_val, real y_val, real z_val);
   	// Set internal variables
-    x_num.set_real(x_val);
-    y_num.set_real(y_val);
-    z_ang.set_deg(z_val);
+    x_num.setReal(x_val);
+    y_num.setReal(y_val);
+    z_ang.setDeg(z_val);
     
-    intf.xPrev = x_num.val_bin;
-    intf.yPrev = y_num.val_bin;
-    intf.zPrev = z_ang.val_bin;
+    intf.xPrev = x_num.binVal;
+    intf.yPrev = y_num.binVal;
+    intf.zPrev = z_ang.getBin();
     
     if(mode)
       intf.rotationDir        = ~intf.zPrev[width-1];
@@ -183,10 +183,10 @@ class core_sequencer #(parameter width =  32, parameter int_width = 0);
 
     if(system) begin
       intf.shiftAmount   = 0;
-      intf.rotationAngle = atan_lut[intf.shiftAmount].val_bin();
+      intf.rotationAngle = atan_lut[intf.shiftAmount].getBin();
     end else begin
       intf.shiftAmount   = 1;
-      intf.rotationAngle = atanh_lut[intf.shiftAmount].val_bin();
+      intf.rotationAngle = atanh_lut[intf.shiftAmount].getBin();
     end
     
     intf.rotationSystem  = system;
@@ -205,9 +205,9 @@ class core_sequencer #(parameter width =  32, parameter int_width = 0);
     intf.yPrev = intf.yResult;
     intf.zPrev = intf.zResult;
   	
-    x_num.set_bin(intf.xPrev);
-    y_num.set_bin(intf.yPrev);
-    z_ang.set_bin(intf.zPrev);
+    x_num.setBin(intf.xPrev);
+    y_num.setBin(intf.yPrev);
+    z_ang.setBin(intf.zPrev);
     
     intf.shiftAmount = intf.shiftAmount + 1;
   
@@ -217,9 +217,9 @@ class core_sequencer #(parameter width =  32, parameter int_width = 0);
       intf.rotationDir        = intf.yPrev[width-1];
       
     if(system)
-      intf.rotationAngle      = atan_lut[intf.shiftAmount].val_bin();
+      intf.rotationAngle      = atan_lut[intf.shiftAmount].getBin();
     else
-      intf.rotationAngle      = atanh_lut[intf.shiftAmount].val_bin();
+      intf.rotationAngle      = atanh_lut[intf.shiftAmount].getBin();
     
     return monitor.sample();
   endfunction

@@ -5,8 +5,8 @@
 `include "cordic_if.svh"
 
 class core_driver #(parameter width =  32, parameter int_width = 0);
-  typedef number #(width, int_width) fixed_pt;		// qn.m fixed point notation, n is integer width and m = width - int_width - 1
-  typedef angle #(width) 	  ang_type;				// Angle in q.m representation, m = width, with 1 representing 180 degrees, -1 representing -180 degrees 
+  typedef Number #(width, int_width) fixed_pt;		// qn.m fixed point notation, n is integer width and m = width - int_width - 1
+  typedef Angle #(width) 	  ang_type;				// Angle in q.m representation, m = width, with 1 representing 180 degrees, -1 representing -180 degrees 
   
   // CORDIC data inputs
   fixed_pt x_num;			// x value
@@ -33,11 +33,11 @@ class core_driver #(parameter width =  32, parameter int_width = 0);
     z_ang = z_val;
   endfunction
   
-  function bit set_real(real x_val, real y_val, real z_val);
+  function bit setReal(real x_val, real y_val, real z_val);
   	// Set internal variables
-    x_num.set_real(x_val);
-    y_num.set_real(y_val);
-    z_ang.set_deg(z_val);    
+    x_num.setReal(x_val);
+    y_num.setReal(y_val);
+    z_ang.setDeg(z_val);    
   endfunction
   
   function bit set_mode(bit inp);
@@ -45,11 +45,11 @@ class core_driver #(parameter width =  32, parameter int_width = 0);
   endfunction
   
   function bit drive(int unsigned shift_amnt, ang_type angle, bit dir);
-  	intf.xPrev = x_num.val_bin;
-    intf.yPrev = y_num.val_bin;
-    intf.zPrev = z_ang.val_num.val_bin;
+  	intf.xPrev = x_num.binVal;
+    intf.yPrev = y_num.binVal;
+    intf.zPrev = z_ang.getBin();
   
-    intf.rotationAngle = angle.val_num.val_bin;
+    intf.rotationAngle = angle.getBin();
     intf.rotationDir   = dir;
     intf.rotationSystem  = mode;
     intf.shiftAmount = shift_amnt;

@@ -2,134 +2,152 @@
 `define TYPES_SVH
 
 // Representation of fixed point number
-class number #(int width = 32, int int_bits = 0);
-  real 							val;
+class Number #(int p_WIDTH = 32, int p_INT_BITS = 0);
+  typedef bit signed[p_WIDTH-1:0] FixedPoint;     // Fixed point representation type
   
-  typedef bit signed[width-1:0] fixed_pt;
+  real                realVal;                    // Floating point value representation
+  rand FixedPoint     binVal;                     // Fixed point value representation
   
-  rand fixed_pt 				val_bin;
+  // Maximum and minimum representable values in fixed point representation
+  static FixedPoint maxBinVal = FixedPoint'({1'b0, {p_WIDTH-1{1'b1}}});
+  static FixedPoint minBinVal = FixedPoint'({1'b1, {p_WIDTH-1{1'b0}}});
   
-  static fixed_pt max_val_bin = fixed_pt'({1'b0, {width-1{1'b1}}});
-  static fixed_pt min_val_bin = fixed_pt'({1'b1, {width-1{1'b0}}});
+  // Maximum and minimum representable values in fixed point representation
+  static real maxRealVal = binToReal(maxBinVal);
+  static real minRealVal = binToReal(minBinVal);
   
-  static real max_val_real = bin_to_real(max_val_bin);
-  static real min_val_real = bin_to_real(min_val_bin);
-  
+  // Constructor intitalized using real value
   function new(real inp = 0);
-    val = inp;
-    val_bin = real_to_bin(inp);
+    realVal = inp;
+    binVal = realToBin(inp);
   endfunction
   
-  function set_real(real inp);
-  	val = inp;
-    val_bin = real_to_bin(inp);
+  // Set from a real input value
+  function setReal(real inp);
+  	realVal = inp;
+    binVal = realToBin(inp);
   endfunction
   
-  function set_bin(fixed_pt inp);
-	val_bin = inp;
-    val = bin_to_real(inp);
+  // Set from a binary input value
+  function setBin(FixedPoint inp);
+	binVal = inp;
+    realVal = binToReal(inp);
   endfunction
   
-  static function fixed_pt real_to_bin(real inp);
-    return fixed_pt'(inp * (2.0 ** (width - int_bits - 1)));
+  // Convert real value to binary value
+  static function FixedPoint realToBin(real inp);
+    return FixedPoint'(inp * (2.0 ** (p_WIDTH - p_INT_BITS - 1)));
   endfunction
   
-  static function real bin_to_real(fixed_pt inp);
-    return real'(inp) * (2.0 ** -(width - int_bits - 1));
+  // Convert binary value to real value
+  static function real binToReal(FixedPoint inp);
+    return real'(inp) * (2.0 ** -(p_WIDTH - p_INT_BITS - 1));
   endfunction
   
-  function string to_string();
-    return $sformatf("0x%8h (%.4f)", val_bin, val);
+  // Return string representing the value
+  function string toString();
+    return $sformatf("0x%8h (%.4f)", binVal, realVal);
   endfunction
   
+  // For randomization, adjust real value from randomized binary value
   function void post_randomize();
-    val = bin_to_real(val_bin);
+    realVal = binToReal(binVal);
   endfunction
 endclass
 
 // Fixed point representation of angle (q.31 fixed point by default)
-class angle #(int width = 32);
-  typedef number#(width, 0) 	num_type;
+class Angle #(int p_WIDTH = 32);
+  typedef Number#(p_WIDTH, 0) 	NumType;  // Type to represent the number
 
-  num_type				 		val_num;
+  NumType   numVal;           // Angle in numeric -1 to 1 format
+  real      radVal;           // Angle in radians (-pi to pi)
+  real      degVal;           // Angle in degrees (-180 to 180)
   
-  real val_rad;
-  
-  real val_deg;
-  
-  function new(real inp_deg);
-    val_num = deg_to_num(inp_deg);
-    val_deg = num_to_deg(val_num);
-    val_rad = num_to_rad(val_num);
+  function new(real inpDeg);
+    numVal = degToNum(inpDeg);
+    degVal = numToDeg(numVal);
+    radVal = numToRad(numVal);
   endfunction
   
-  function void set_deg(real inp);
-    val_num = deg_to_num(inp);
-    val_deg = num_to_deg(val_num);
-    val_rad = num_to_rad(val_num);
+  // Set from degree value
+  function bit setDeg(real inp);
+    if(inp < -180 || inp > 180)
+      return 0;
+    numVal = degToNum(inp);
+    degVal = numToDeg(numVal);
+    radVal = numToRad(numVal);
+    return 1;
   endfunction
   
-  function void set_rad(real inp);
-    val_num = rad_to_num(inp);
-    val_deg = num_to_deg(val_num);
-    val_rad = num_to_rad(val_num);
+  // Set from radian value
+  function bit setRad(real inp);
+    numVal = radToNum(inp);
+    degVal = numToDeg(numVal);
+    radVal = numToRad(numVal);
   endfunction
   
-  function void set_bin(num_type::fixed_pt inp);
-    val_num.set_bin(inp);
-    val_deg = num_to_deg(val_num);
-    val_rad = num_to_rad(val_num);
+  // Set from binary value
+  function bit setBin(NumType::FixedPoint inp);
+    numVal.setBin(inp);
+    degVal = numToDeg(numVal);
+    radVal = numToRad(numVal);
   endfunction
   
-  function num_type::fixed_pt val_bin();
-    return val_num.val_bin;
+  // Get binary value
+  function NumType::FixedPoint getBin();
+    return numVal.binVal;
   endfunction
 
-  static function real num_to_rad(num_type inp);
-    return inp.val * $acos(-1);
+  // Convert number object to radian
+  static function real numToRad(NumType inp);
+    return inp.realVal * $acos(-1);
   endfunction
   
-  static function real num_to_deg(num_type inp);
-    return inp.val * 180;
+  // Convert number object to degree
+  static function real numToDeg(NumType inp);
+    return inp.realVal * 180;
   endfunction
   
-  static function num_type rad_to_num(real inp);
-    num_type temp = new(inp / $acos(-1));
+  // Convert radian to number object
+  static function NumType radToNum(real inp);
+    NumType temp = new(inp / $acos(-1));
     return temp;
   endfunction
   
-  static function num_type deg_to_num(real inp);
-    num_type temp = new(inp / 180);
+  // Convert degree to number object
+  static function NumType degToNum(real inp);
+    NumType temp = new(inp / 180);
     return temp;
   endfunction
   
-  static function real bin_to_deg(num_type::fixed_pt inp);
-    num_type temp = new();
-    temp.set_bin(inp);
-    return num_to_deg(temp);
+  // Convert fixed point representation to degree
+  static function real binToDeg(NumType::FixedPoint inp);
+    NumType temp = new();
+    temp.setBin(inp);
+    return numToDeg(temp);
   endfunction
 
-  static function real bin_to_rad(num_type::fixed_pt inp);
-    num_type temp = new();
-    temp.set_bin(inp);
-    return num_to_rad(temp);
+  // Convert fixed point representation to radian
+  static function real binToRad(NumType::FixedPoint inp);
+    NumType temp = new();
+    temp.setBin(inp);
+    return numToRad(temp);
   endfunction
   
+  // For randomization, first randomize numeric value
   function void pre_randomize();
-    val_num.randomize();
+    numVal.randomize();
   endfunction
-  
+
+  // After randomizing numeric value, convert it to radian and degree
   function void post_randomize();
-    val_rad = num_to_rad(val_num);
-    val_deg = num_to_deg(val_num);
+    radVal = numToRad(numVal);
+    degVal = numToDeg(numVal);
   endfunction
   
-  function string to_string();
-    return $sformatf("0x%8h (%7.2f deg)", val_num.val_bin, val_deg);
-  endfunction
-  
-  function string to_string_long();
-    return $sformatf("0x%8h %7.4f (%7.2f deg, %7.4f rad)", val_num.val_bin, val_num.val, val_deg, val_rad);
+  // Convert to string : binary (degree) format
+  function string toString();
+    return $sformatf("0x%8h (%7.2f deg)", numVal.binVal, degVal);
   endfunction
 endclass
 
