@@ -25,6 +25,14 @@ For synthesizable verilog code and testbench code thats not inside classes, use 
 | ```s_```| State definitions (as localparam)
 | ```e_```| Event
 
+| Type                  | Case
+|---                    |---
+| Variable name         | *camelCase*
+| Function name         | *camelCase*
+| Type name             | *PascalCase*
+| ``` `define``` macro  | *UPPERCASE*
+| Parameters            | *UPPERCASE*
+
 ## Contributors
 
 Harith Manoj <harithpub@gmail.com>
