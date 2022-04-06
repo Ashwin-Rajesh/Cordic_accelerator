@@ -19,15 +19,16 @@ interface BusInterface #(
 
     logic rst;
     logic clk;
+    logic interrupt;
 
     modport controller (
         input xInput, yInput, zInput, controlRegisterInput, clk, rst,
-        output xResult, yResult, zResult, controlRegisterOutput, controlRegisterMask
+        output xResult, yResult, zResult, controlRegisterOutput, controlRegisterMask, interrupt
     );
 
     modport bus (
         output xInput, yInput, zInput, controlRegisterInput, clk, rst,
-        input xResult, yResult, zResult, controlRegisterOutput, controlRegisterMask
+        input xResult, yResult, zResult, controlRegisterOutput, controlRegisterMask, interrupt
     );
 
 endinterface
