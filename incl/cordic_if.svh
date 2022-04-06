@@ -11,9 +11,9 @@ interface CordicInterface #(
   logic signed [p_WIDTH - 1:0] 	zPrev;
 
   // Control inputs
-  logic                       rotationDir;
-  logic 						          rotationSystem;
-  logic[p_WIDTH - 1:0] 			  rotationAngle;
+  logic                       rotationDir;      // 1 for clockwise, 0 for counter-clockwise
+  logic 						          rotationSystem;   // 1 for circular, 0 for hyperbolic
+  logic[p_WIDTH - 1:0] 			  rotationAngle;    // Angle we are rotation by (from LUT)
   logic[p_LOG2_WIDTH-1:0] 		shiftAmount;
 
   // Data outputs
