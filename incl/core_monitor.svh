@@ -9,9 +9,13 @@ class CoreMonitor #(parameter width =  32, parameter int_width = 0);
   typedef Angle #(width) 	            AngType;    // Angle in q.m representation, m = width, with 1 representing 180 degrees, -1 representing -180 degrees 
   
   // CORDIC data inputs
-  NumType  xNum;			// x value
-  NumType  yNum;			// y value
-  AngType  zAng;			// angle value
+  NumType  xOut;			// x output value
+  NumType  yOut;			// y output value
+  AngType  zOut;			// angle output value
+
+  NumType  xInp;        // x input value
+  NumType  yInp;        // y input value
+  AngType  zInp;        // angle input value
   
   bit       xOverflow;
   bit       yOverflow;
@@ -21,21 +25,30 @@ class CoreMonitor #(parameter width =  32, parameter int_width = 0);
   
   function new(virtual CordicInterface.controller inpIntf);
     // Initialize internal variables
-    xNum = new(0);
-    yNum = new(0);
-    zAng = new(0);
+    xOut = new(0);
+    yOut = new(0);
+    zOut = new(0);
+
+    xInp = new(0);
+    yInp = new(0);
+    zInp = new(0);
+
     this.intf = inpIntf;    
   endfunction
   
   function bit sample();
-    xNum.setBin(intf.xResult);
-    yNum.setBin(intf.yResult);
-    zAng.setBin(intf.zResult);
+    xOut.setBin(intf.xOut);
+    yOut.setBin(intf.yOut);
+    zOut.setBin(intf.zOut);
     
+    xInp.setBin(intf.xPrev);
+    yInp.setBin(intf.yPrev);
+    zInp.setBin(intf.zPrev);
+
 	  xOverflow = intf.xOverflow;    
     yOverflow = intf.yOverflow;    
     zOverflow = intf.zOverflow;    
-      
+    
     return (xOverflow || yOverflow || zOverflow);
   endfunction
 endclass
