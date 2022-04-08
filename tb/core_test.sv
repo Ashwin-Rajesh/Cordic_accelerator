@@ -12,9 +12,11 @@ module testbench;
   localparam real p_CIRC_FACTOR = 0.6072529350092496;
 
   localparam real p_HYP_FACTOR = 1.2051363584457304;
+
+  localparam int p_CORDIC_NUM_ITER = 25;	// Number of CORDIC iterations
   
   localparam bit p_SYSTEM = 0;				// 1 : Circular,   	0 : Hyperbolic
-  localparam bit p_MODE = 1;				  // 1 : Rotation, 	0 : Vectoring
+  localparam bit p_MODE = 0;				// 1 : Rotation, 	0 : Vectoring
   
   localparam p_INT_BITS = p_SYSTEM ? 0 : 3; // Number of bits for integer part
 
@@ -81,36 +83,8 @@ module testbench;
 
       overflow = 0;
 
-      /*
-      if(p_SYSTEM) begin
-        if(p_MODE) begin
-          // Circlar rotation
-          xInitNum.setReal(p_CIRC_FACTOR);
-          yInitNum.setReal(0);
-          zInitAngle.setDeg(45);
-        end else begin
-          // Circular vectoring
-          xInitNum.setReal(0);
-          yInitNum.setReal(0.1);
-          zInitAngle.setDeg(0);
-        end
-      end else begin
-        if(p_MODE) begin
-          // Hyperbolic rotation
-          xInitNum.setReal(p_HYP_FACTOR);
-          yInitNum.setReal(0);
-          zInitAngle.setDeg(23);      
-        end else begin
-          // Hyperbolic vectoring
-          xInitNum.setReal(1);
-          yInitNum.setReal(0.5);
-          zInitAngle.setDeg(0);
-        end
-      end
-      */
-
       // Randomize x and y values
-	  xInitNum.randomize();
+	    xInitNum.randomize();
       yInitNum.randomize();
       
       // Randomize angle for rotation mode and set to zero for vectoring mode  
@@ -145,19 +119,13 @@ module testbench;
           zExp = zInitAngle.degVal + ($atan2(yInitNum.realVal, xInitNum.realVal) * 180 / $acos(-1));
 
           if($abs(zExp) > 99) begin
-            if(p_LOG_TESTS) $display("abs(expected ang) < 99 for circular rotation");
+            if(p_LOG_TESTS) $display("abs(expected ang) < 99 for circular vectoring");
             iter1--;
             continue;
           end
-		end      
+		end
       end else begin
         if(p_MODE) begin
-          if($abs(zInitAngle.degVal) > 60) begin
-            if(p_LOG_TESTS) $display("abs(ang) < 60 for hyperbolic rotation");
-            iter1--;
-            continue;
-          end
-          
           // Hyperbolic rotation
           xExp = (xInitNum.realVal * $cosh(zInitAngle.radVal) + yInitNum.realVal * $sinh(zInitAngle.radVal)) / p_HYP_FACTOR;
           yExp = (yInitNum.realVal * $cosh(zInitAngle.radVal) + xInitNum.realVal * $sinh(zInitAngle.radVal)) / p_HYP_FACTOR;
@@ -170,9 +138,21 @@ module testbench;
             continue;
           end
           
+          if(xInitNum.realVal < 0) begin
+            if(p_LOG_TESTS) $display("x > 0 for hyperbolic vectoring");
+            iter1--;
+            continue;
+          end
+          
           xExp = $sqrt(xInitNum.realVal ** 2 - yInitNum.realVal ** 2) / p_HYP_FACTOR;
           yExp = 0;
           zExp = zInitAngle.degVal + ($atanh(yInitNum.realVal / xInitNum.realVal) * 180 / $acos(-1));
+
+          if($abs(zExp) > 60) begin
+            if(p_LOG_TESTS) $display("abs(ang) < 60 for hyperbolic vectoring");
+            iter1--;
+            continue;
+          end
         end     
       end
 
@@ -189,7 +169,7 @@ module testbench;
       #10;
 
       // Perform CORDIC iterations (rotation/vectoring)
-      for(int iter2 = 0; iter2 < 15; iter2++) begin
+      for(int iter2 = 0; iter2 < p_CORDIC_NUM_ITER; iter2++) begin
         if(p_LOG_ITER) $display("%8d : %10f, %10f, %10f", iter2, sequencer.xNum.realVal, sequencer.yNum.realVal, sequencer.zAng.degVal);
         if(sequencer.iterate()) begin
           if(p_LOG_TESTS) $display("Overflow detected after iteration %2d", iter2);
@@ -199,7 +179,7 @@ module testbench;
         end
         #1;
       end
-
+      
       // Display final CORDIC state
       if(p_LOG_TESTS) $display("Final    : %10f, %10f, %10f", sequencer.xNum.realVal, sequencer.yNum.realVal, sequencer.zAng.degVal);
       
