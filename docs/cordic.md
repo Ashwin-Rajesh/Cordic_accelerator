@@ -86,9 +86,20 @@ Each of these additions can overflow, and if they do, they are reported using ac
 
 ---
 
-## CORDIC sequencing guide
+### Controlling the CORDIC core
 
-The CORDIC core does the computation and the sequencer gives appropriate control inputs to the CORDIC. These are the important points for controlling the CORDIC core
+The CORDIC core is a purely combinational unit that does the computation and the controller / sequencer gives appropriate control inputs to the CORDIC. These are the important points for controlling the CORDIC core.
+
+#### Inputs to the controller
+
+- Initial x value
+- Initial y value
+- Initiail angle (z) value
+- Hyperbolic / circular rotation system?
+- Rotation / vectoring mode?
+- Number of iterations
+
+#### Control logic
 
 | Port Name     | How to initialize?    | On each iteration?    |
 |---            |---                    |---                    |
@@ -99,3 +110,14 @@ The CORDIC core does the computation and the sequencer gives appropriate control
 | rotationSystem | Hyperbolic / Circular | Hyperbolic / Circular (should not change) |
 | rotationAngle | Look up from table    | Look up from table    |
 | shiftAmount   | 0 for circ, 1 for hyp | ```= shiftAmount + 1``` |
+
+#### Limitations
+
+Maximum rotation angle (for both rotation and vectoring) is :
+
+| Rotation system   | Maximum /minimum rotation angle       |
+|---                |--- |
+| Circular          | +/- 100 degrees                       |
+| Hyperbolic        | +/- 60 degrees                        |
+
+Also, for rotations, ```abs(x) < abs(y)``` and x < 0 (abs is short for absolute / magnitude)
