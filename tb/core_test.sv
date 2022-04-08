@@ -15,8 +15,8 @@ module testbench;
 
   localparam int p_CORDIC_NUM_ITER = 10;	// Number of CORDIC iterations
   
-  localparam bit p_CORDIC_SYSTEM = 1;	    // 1 : Circular,   	0 : Hyperbolic
-  localparam bit p_CORDIC_MODE = 1;				// 1 : Rotation, 	0 : Vectoring
+  localparam bit p_CORDIC_SYSTEM = 0;	    // 1 : Circular,   	0 : Hyperbolic
+  localparam bit p_CORDIC_MODE = 0;				// 1 : Rotation, 	0 : Vectoring
   
   localparam p_INT_BITS = p_CORDIC_SYSTEM ? 0 : 3; // Number of bits for integer part
 
@@ -243,13 +243,14 @@ module testbench;
     end
     
     $display("---------------------------------------------");
+    $display("Test table");
     $display("%2s : %10s, %10s, %10s | %10s, %10s, %11s | %12s, %12s, %10s", "No", "init x", "init y", "init ang", "exp x", "exp y", "exp ang", "error x", "error y", "error ang");
     for(int iter3 = 0; iter3 < xErrorHist.size(); iter3++) begin
       $display("%2d : %10f, %10f, %10f | %10f, %10f, %11f | %12e, %12e, %10f : %2s", idxHist[iter3], xInitHist[iter3] , yInitHist[iter3], zInitHist[iter3], xExpHist[iter3], yExpHist[iter3], zExpHist[iter3], xErrorHist[iter3] , yErrorHist[iter3], zErrorHist[iter3], validHist[iter3] ? "OK" : "Overflow");
     end
     
     $display("---------------------------------------------");
-    
+    $display("Test summary");
     $display(" Error of x : %12e to %12e, avg %e", getMin(xErrorHist), getMax(xErrorHist), xErrorHist.sum() / xErrorHist.size());
     $display(" Error of y : %12e to %12e, avg %e", getMin(yErrorHist), getMax(yErrorHist), yErrorHist.sum() / yErrorHist.size());
     $display(" Error of z : %8f deg to %8f deg, avg %f deg", getMin(zErrorHist), getMax(zErrorHist), zErrorHist.sum() / zErrorHist.size());
