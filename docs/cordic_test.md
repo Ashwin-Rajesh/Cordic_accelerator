@@ -154,6 +154,7 @@ The important info from each test is aggregated into a table and displayed at th
 
 ```
 ---------------------------------------------
+Test table
 No :     init x,     init y,   init ang |      exp x,      exp y,     exp ang |      error x,      error y,  error ang
  0 :   0.271516,   0.229429,   5.503677 |   0.408824,   0.418956,    0.000000 | 6.906095e-04, 6.722796e-04,   0.094336 :       OK
  1 :  -0.651902,  -0.478119,  10.850380 |  -0.906119,  -0.975357,    0.000000 | 7.323366e-01, 1.845337e+00,  34.149620 : Overflow
@@ -169,6 +170,7 @@ Important statistics of error is shown at the end. The minimum and maximum magni
 
 ```
 ---------------------------------------------
+Test summary
  Error of x : 1.380574e-04 to 7.323366e-01, avg 1.469503e-01
  Error of y : 1.621988e-04 to 1.845337e+00, avg 3.696818e-01
  Error of z : 0.037425 deg to 34.149620 deg, avg 6.890334 deg
