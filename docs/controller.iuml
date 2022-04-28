@@ -1,0 +1,32 @@
+@startuml Controller
+state idle : X <= x_input\nY<= y_input\nZ <= z_input\ncontrol<=control_input
+idle -left-> idle : not start
+
+state c <<choice>>
+state microRotation{
+    state prepare : lookup angle
+    
+    state rotate : perform micro rotation
+    prepare -down-> rotate
+
+    state update : decrement iter,\nwrite X, Y, Z, control and flags
+    rotate -down-> update
+    update -down-> c
+}
+
+
+
+c -right-> prepare : iter != 0
+
+idle --> prepare : rise start
+
+state stop : set ready
+
+c -left-> stop : iter == 0
+stop -up-> idle
+
+state error : set flags\nraise interrupt
+
+c -left-> error : rise stop or rotation flag
+error -up-> stop
+@enduml
