@@ -167,7 +167,7 @@ class CoreSequencer #(parameter width =  32, parameter int_width = 0);
     end
   endfunction
   
-  function bit reset(real xInp, real yInp, real zInp);
+  function void reset(real xInp, real yInp, real zInp);
   	// Set internal variables
     xNum.setReal(xInp);
     yNum.setReal(yInp);
@@ -193,11 +193,11 @@ class CoreSequencer #(parameter width =  32, parameter int_width = 0);
     intf.rotationSystem  = rotationSystem;
   endfunction
   
-  function bit setRotationSystem(bit inp);
+  function void setRotationSystem(bit inp);
   	rotationSystem = inp;
   endfunction
   
-  function bit setControlMode(bit inp);
+  function void setControlMode(bit inp);
   	controlMode = inp;
   endfunction
   
