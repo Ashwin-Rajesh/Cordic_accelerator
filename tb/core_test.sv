@@ -13,10 +13,10 @@ module testbench;
 
   localparam real p_HYP_FACTOR = 1.2051363584457304;
 
-  localparam int p_CORDIC_NUM_ITER = 15;	// Number of CORDIC iterations
+  localparam int p_CORDIC_NUM_ITER = 30;	// Number of CORDIC iterations
   
-  localparam bit p_CORDIC_SYSTEM = 0;	    // 1 : Circular,   	0 : Hyperbolic
-  localparam bit p_CORDIC_MODE = 0;				// 1 : Rotation, 	0 : Vectoring
+  localparam bit p_CORDIC_SYSTEM = 1;	    // 1 : Circular,   	0 : Hyperbolic
+  localparam bit p_CORDIC_MODE = 1;				// 1 : Rotation, 	0 : Vectoring
   
   localparam p_INT_BITS = p_CORDIC_SYSTEM ? 0 : 3; // Number of bits for integer part
 
@@ -52,10 +52,16 @@ module testbench;
   real xInitHist[$],  yInitHist[$],   zInitHist[$];     // Initial values history
   real xExpHist[$],   yExpHist[$],    zExpHist[$];      // Expected values history
   real xErrorHist[$], yErrorHist[$],  zErrorHist[$];    // Error value history
-  bit  validHist[$];                                    // Was the output valid? (false if it overflowed)
-  
+  int  ovIterHist[$];                                   // Overflow iteration count
+  bit  xOvHist[$],    yOvHist[$],     zOvHist[$];       // Overflow types
+
   // Overflow flag
-  bit overflow = 0;
+  bit xOverflow = 0;
+  bit yOverflow = 0;
+  bit zOverflow = 0;
+  int overflowIter = 0;
+
+  int iTest, iIter;
   
   initial begin
     // Dump to VCD file
@@ -84,15 +90,19 @@ module testbench;
 
     $display("CORDIC iteration logging    : %s", p_LOG_ITER ? "ON" : "OFF");
     $display("Test logging                : %s", p_LOG_TESTS ? "ON" : "OFF");
+    $display("Input constraints           : %s", p_LIMIT_INPUTS ? "ON" : "OFF");
     $display("---------------------------------------------");
     
     // Run the tests
-    for(int iter1 = 0; iter1 < p_NUM_TESTS; iter1++) begin
+    for(iTest = 0; iTest < p_NUM_TESTS; iTest++) begin
       
       if(p_LOG_TESTS)
-        $display(" Test no : %d", iter1);
+        $display(" Test no : %d", iTest);
 
-      overflow = 0;
+      xOverflow = 0;
+      yOverflow = 0;
+      zOverflow = 0;
+      overflowIter = -1;
       
       // Randomize x and y values
       xInitNum.randomize();
@@ -104,7 +114,7 @@ module testbench;
       end else begin
         zInitAngle.setDeg(0);
       end
-      
+
       // Custom values for single iteration
       if(p_NUM_TESTS == 1) begin
         if(p_CORDIC_SYSTEM) begin
@@ -143,55 +153,62 @@ module testbench;
       
       // Check validity and find expected values
       if(p_CORDIC_SYSTEM) begin
+        if(((xInitNum.realVal ** 2) + (yInitNum.realVal ** 2)) ** 0.5 > 0.61 && p_LIMIT_INPUTS) begin
+          if(p_LOG_TESTS) $display("Input vector amplitude < 0.61 for circular");
+          iTest--;
+          continue;
+        end
+
         if(p_CORDIC_MODE) begin
-          if($abs(zInitAngle.degVal) > 99 && p_LIMIT_INPUTS) begin
-            if(p_LOG_TESTS) $display("abs(ang) < 99 for circular rotation");
-            iter1--;
-            continue;
-          end
-          
           // Circular rotation
           xExp = (xInitNum.realVal * $cos(zInitAngle.radVal) - yInitNum.realVal * $sin(zInitAngle.radVal)) / p_CIRC_FACTOR;
           yExp = (yInitNum.realVal * $cos(zInitAngle.radVal) + xInitNum.realVal * $sin(zInitAngle.radVal)) / p_CIRC_FACTOR;
           zExp = 0;
+
+          if($abs(zInitAngle.degVal) > 100 && p_LIMIT_INPUTS) begin                     // Input angle < 100 degrees
+            if(p_LOG_TESTS) $display("abs(ang) < 100 for circular rotation");
+            iTest--;
+            continue;
+          end
         end else begin
           // Circular vectoring
           xExp = (xInitNum.realVal ** 2 + yInitNum.realVal ** 2) ** 0.5 / p_CIRC_FACTOR;
           yExp = 0;
           zExp = zInitAngle.degVal + ($atan2(yInitNum.realVal, xInitNum.realVal) * 180 / $acos(-1));
-
-          if($abs(zExp) > 99 && p_LIMIT_INPUTS) begin
-            if(p_LOG_TESTS) $display("abs(expected ang) < 99 for circular vectoring");
-            iter1--;
+          
+          if($abs(zExp) > 100 && p_LIMIT_INPUTS) begin                                  // Expected angle < 100 degrees
+            if(p_LOG_TESTS) $display("abs(expected ang) < 100 for circular vectoring");
+            iTest--;
             continue;
           end
-    end
+        end
       end else begin
+        if(((xInitNum.realVal ** 2) + (yInitNum.realVal ** 2)) ** 0.5 > 1.2 && p_LIMIT_INPUTS) begin
+           if(p_LOG_TESTS) $display("Input vector amplitude < 1.2 for hyperbolic");
+          iTest--;
+          continue;
+        end
+        
         if(p_CORDIC_MODE) begin
           // Hyperbolic rotation
           xExp = (xInitNum.realVal * $cosh(zInitAngle.getReal()) + yInitNum.realVal * $sinh(zInitAngle.getReal())) / p_HYP_FACTOR;
           yExp = (yInitNum.realVal * $cosh(zInitAngle.getReal()) + xInitNum.realVal * $sinh(zInitAngle.getReal())) / p_HYP_FACTOR;
           zExp = 0;
-          
-          // if($abs(zInitAngle.degVal) > 60 && p_LIMIT_INPUTS) begin
-          //   if(p_LOG_TESTS) $display("abs(ang) < 60 for hyperbolic rotation");
-          //   iter1--;
-          //   continue;
-          // end
         end else begin
-          // Hyperbolic vectoring
-          if($abs(yInitNum.realVal) > $abs(xInitNum.realVal) && p_LIMIT_INPUTS) begin
-            if(p_LOG_TESTS) $display("abs(y) < abs(x) for hyperbolic vectoring");
-            iter1--;
-            continue;
-          end
-          
+          // Hyperbolic vectoring          
           if(xInitNum.realVal < 0 && p_LIMIT_INPUTS) begin
             if(p_LOG_TESTS) $display("x > 0 for hyperbolic vectoring");
-            iter1--;
+            iTest--;
             continue;
           end
           
+          if($abs(yInitNum.realVal) > $abs(xInitNum.realVal) && p_LIMIT_INPUTS) begin // y < x for hyperbolic vectoring
+            if(p_LOG_TESTS) $display("abs(y) < abs(x) for hyperbolic vectoring");
+            iTest--;
+            continue;
+          end
+
+          // Get expected values
           if($abs(yInitNum.realVal) > $abs(xInitNum.realVal))
             xExp = 0;
           else
@@ -202,20 +219,19 @@ module testbench;
           else
             zExp = zInitAngle.getReal() + ($atanh(yInitNum.realVal / xInitNum.realVal));
 
-          if($abs(zExp) > 1 && p_LIMIT_INPUTS) begin
+          if($abs(zExp) > 1 && p_LIMIT_INPUTS) begin                                // Angle < 1 for hyperbolic vectoring
             if(p_LOG_TESTS) $display("abs(ang) < 1 rad for hyperbolic vectoring");
-             iter1--;
+             iTest--;
              continue;
           end
         end     
       end
-
       
-      if((xExp > NumType::maxRealVal || xExp < NumType::minRealVal  || yExp > NumType::maxRealVal || yExp < NumType::minRealVal) && p_LIMIT_INPUTS) begin
-        if(p_LOG_TESTS) $display("Expected value will overflow");
-        iter1--;
-        continue;
-      end
+      // if((xExp > NumType::maxRealVal || xExp < NumType::minRealVal  || yExp > NumType::maxRealVal || yExp < NumType::minRealVal) && p_LIMIT_INPUTS) begin
+      //   if(p_LOG_TESTS) $display("Expected value will overflow");
+      //   iTest--;
+      //   continue;
+      // end
       
       sequencer.setRotationSystem(p_CORDIC_SYSTEM);
       sequencer.setControlMode(p_CORDIC_MODE);
@@ -223,16 +239,20 @@ module testbench;
       #10;
 
       // Perform CORDIC iterations (rotation/vectoring)
-      for(int iter2 = 0; iter2 < p_CORDIC_NUM_ITER; iter2++) begin
+      for(iIter = 0; iIter < p_CORDIC_NUM_ITER; iIter++) begin
         if(p_LOG_TESTS && p_LOG_ITER) 
           if(p_CORDIC_SYSTEM)
-          	$display("%8d : %10f, %10f, %10f", iter2, sequencer.xNum.realVal, sequencer.yNum.realVal, sequencer.zAng.degVal);
+          	$display("%8d : %10f, %10f, %10f", iIter, sequencer.xNum.realVal, sequencer.yNum.realVal, sequencer.zAng.degVal);
           else
-          	$display("%8d : %10f, %10f, %10f", iter2, sequencer.xNum.realVal, sequencer.yNum.realVal, sequencer.zAng.getReal());
+          	$display("%8d : %10f, %10f, %10f", iIter, sequencer.xNum.realVal, sequencer.yNum.realVal, sequencer.zAng.getReal());
         if(sequencer.iterate()) begin
-          if(p_LOG_TESTS) $display("Overflow detected after iteration %2d", iter2);
-          overflow = 1;
-          // assert(xExp > NumType::maxRealVal || xExp < NumType::minRealVal  || yExp > NumType::maxRealVal || yExp < NumType::minRealVal);
+          if(p_LOG_TESTS) $display("Overflow detected after iteration %2d", iIter);
+
+          xOverflow = sequencer.monitor.xOverflow;
+          yOverflow = sequencer.monitor.yOverflow;
+          zOverflow = sequencer.monitor.zOverflow;
+          overflowIter = iIter;
+
           break;
         end
         #1;
@@ -271,15 +291,18 @@ module testbench;
       else
         zErrorHist.push_back($abs(sequencer.zAng.getReal() - zExp));
 
-      validHist.push_back(~overflow);
-      idxHist.push_back(iter1);
+      ovIterHist.push_back(overflowIter);
+      xOvHist.push_back(xOverflow);
+      yOvHist.push_back(yOverflow);
+      zOvHist.push_back(zOverflow);
+      idxHist.push_back(iTest);
     end
     
     $display("---------------------------------------------");
     $display("Test table");
-    $display("%2s : %10s, %10s, %10s | %10s, %10s, %11s | %12s, %12s, %10s", "No", "init x", "init y", "init ang", "exp x", "exp y", "exp ang", "error x", "error y", "error ang");
+    $display("%2s : %10s, %10s, %10s | %10s, %10s, %11s | %12s, %12s, %12s : %3s, %12s", "No", "init x", "init y", "init ang", "exp x", "exp y", "exp ang", "error x", "error y", "error ang", "overflows (xyz)", "overflow iteration");
     for(int iter3 = 0; iter3 < xErrorHist.size(); iter3++) begin
-      $display("%2d : %10f, %10f, %10f | %10f, %10f, %11f | %12e, %12e, %12e : %2s", idxHist[iter3], xInitHist[iter3] , yInitHist[iter3], zInitHist[iter3], xExpHist[iter3], yExpHist[iter3], zExpHist[iter3], xErrorHist[iter3] , yErrorHist[iter3], zErrorHist[iter3], validHist[iter3] ? "OK" : "Overflow");
+      $display("%2d : %10f, %10f, %10f | %10f, %10f, %11f | %12e, %12e, %12e : %1b%1b%1b, %2d", idxHist[iter3], xInitHist[iter3] , yInitHist[iter3], zInitHist[iter3], xExpHist[iter3], yExpHist[iter3], zExpHist[iter3], xErrorHist[iter3] , yErrorHist[iter3], zErrorHist[iter3], xOvHist[iter3], yOvHist[iter3], zOvHist[iter3], ovIterHist[iter3]);
     end
     
     $display("---------------------------------------------");

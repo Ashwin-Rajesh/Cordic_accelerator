@@ -18,16 +18,16 @@ class log_file:
                 self.circ = False
             elif(inp[0] == "Circular"):
                 self.hyp  = False
-                self.cic  = True
+                self.circ  = True
             else:
                 return False, "Line 1 : rotationSystem '%s' not recognized"%(inp[0])
             
             if(inp[1] == "rotation"):
                 self.rot  = True
-                self.vec  = False
+                self.vect  = False
             elif(inp[1] == "vectoring"):
                 self.rot  = False
-                self.vec  = True
+                self.vect  = True
             else:
                 return False, "Line 1 : controlMode '%s' not recognized"%(inp[1])
 
@@ -103,7 +103,7 @@ class log_file:
                 self.inp_hist.append(tuple(map(float, dat[0].split(','))))
                 self.exp_hist.append(tuple(map(float, dat[1].split(','))))
                 self.err_hist.append(tuple(map(float, dat[2].split(','))))
-                self.sta_hist.append(True if inp[2].strip() == "OK" else False)
+                self.sta_hist.append(True if int(inp[2].split(',')[1]) == -1 else False)
 
             self.inp_good, self.inp_fail = self.separate(self.inp_hist)
             self.err_good, self.err_fail = self.separate(self.err_hist)
@@ -127,8 +127,18 @@ class log_file:
         plt.title("Input coordinates")
         plt.legend()
 
-        # Scatter plot for expected coordinates
+        # Scatter plot for input coordinate magnitude and input rotation angle
         plt.subplot(132)
+        plt.scatter(self.inp_good[:, 2], np.linalg.norm(self.inp_good[:, 0:2], axis=1), s=5,  marker="o", c="green", label="Success")
+        if(len(self.exp_fail) != 0): plt.scatter(self.inp_fail[:, 2], np.linalg.norm(self.inp_fail[:, 0:2], axis=1), s=10, marker="x", c="red",   label="Overflow")
+        
+        plt.xlabel("Input angle")
+        plt.ylabel("Input coordinate magnitude")
+        plt.title("Input rotation angle and input coordinate magnitude")
+        plt.legend()
+
+        # Scatter plot for expected coordinates
+        plt.subplot(133)
         plt.scatter(self.exp_good[:, 0], self.exp_good[:, 1], s=5,  marker="o", c="green", label="Success")
         if(len(self.exp_fail) != 0): plt.scatter(self.exp_fail[:, 0], self.exp_fail[:, 1], s=10, marker="x", c="red",   label="Overflow")
 
@@ -137,23 +147,13 @@ class log_file:
         plt.title("Expected output coordinates")
         plt.legend()
 
-        # Scatter plot for input coordinate magnitude and input rotation angle
-        plt.subplot(133)
-        plt.scatter(self.inp_good[:, 2], np.linalg.norm(self.inp_good[:, 0:2], axis=1), s=5,  marker="o", c="green", label="Success")
-        if(len(self.exp_fail) != 0): plt.scatter(self.inp_fail[:, 2], np.linalg.norm(self.inp_fail[:, 0:2], axis=1), s=10, marker="x", c="red",   label="Overflow")
-
-        plt.xlabel("Input angle")
-        plt.ylabel("Input coordinate magnitude")
-        plt.title("Input rotation angle and input coordinate magnitude")
-        plt.legend()
-
         plt.show()
 
     def vis_vect_inputs(self):
         plt.figure(figsize=(30, 10), dpi=80)
 
         # Scatter plot for input coordintates
-        plt.subplot(121)
+        plt.subplot(131)
         plt.scatter(self.inp_good[:, 0], self.inp_good[:, 1], s=5,  marker="o", c="green", label="Success")
         if(len(self.exp_fail) != 0): plt.scatter(self.inp_fail[:, 0], self.inp_fail[:, 1], s=10, marker="x", c="red",   label="Overflow")
 
@@ -162,13 +162,23 @@ class log_file:
         plt.title("Input coordinates")
         plt.legend()
 
-        # Scatter plot for input coordinate magnitude and input rotation angle
-        plt.subplot(122)
-        plt.scatter(self.exp_good[:, 2], np.linalg.norm(self.inp_good[:, 0:2], axis=1), s=5,  marker="o", c="green", label="Success")
-        if(len(self.exp_fail) != 0): plt.scatter(self.exp_fail[:, 2], np.linalg.norm(self.inp_fail[:, 0:2], axis=1), s=10, marker="x", c="red",   label="Overflow")
-
-        plt.xlabel("Expected angle")
+        # Scatter plot for input coordinate magnitude and initial angle
+        plt.subplot(132)
+        plt.scatter(self.inp_good[:, 2], np.linalg.norm(self.inp_good[:, 0:2], axis=1), s=5,  marker="o", c="green", label="Success")
+        if(len(self.exp_fail) != 0): plt.scatter(self.inp_fail[:, 2], np.linalg.norm(self.inp_fail[:, 0:2], axis=1), s=10, marker="x", c="red",   label="Overflow")
+        
+        plt.xlabel("Input angle")
         plt.ylabel("Input coordinate magnitude")
+        plt.title("Input rotation angle and input coordinate magnitude")
+        plt.legend()
+
+        # Scatter plot for expected x and expected angle
+        plt.subplot(133)
+        plt.scatter(self.exp_good[:, 2], self.exp_good[:, 0], s=5,  marker="o", c="green", label="Success")
+        if(len(self.exp_fail) != 0): plt.scatter(self.exp_fail[:, 2], self.exp_fail[:, 0], s=10, marker="x", c="red",   label="Overflow")
+
+        plt.xlabel("Expected angle output")
+        plt.ylabel("Expected x coordinate output")
         plt.title("Input rotation angle and input coordinate magnitude")
         plt.legend()
 
@@ -257,6 +267,15 @@ class log_file:
         else:
             self.vis_vect_error()
 
+    def get_description(self):
+        temp = ""
+        temp = temp + ("Circular" if self.circ else "Hyperbolic") + " "
+        temp = temp + ("Rotation" if self.rot else "Vectoring") + " test "
+        temp = temp + "with " + str(self.num_tests) + " tests of "
+        temp = temp + str(self.num_iter) + " iterations each"
+
+        return temp
+
 # Pass filenames to directly visualize them using these functions
  
 def vis_rot_inputs_file(filename):
@@ -275,18 +294,18 @@ def vis_rotation_file(filename):
     f1.vis_rot_inputs()
     f1.vis_rot_error()
 
-def vis_vec_inputs_file(filename):
+def vis_vect_inputs_file(filename):
     f1 = log_file(filename)
     f1.parse()
-    f1.vis_vec_inputs()
+    f1.vis_vect_inputs()
 
-def vis_vec_error_file(filename):
+def vis_vect_error_file(filename):
     f1 = log_file(filename)
     f1.parse()
-    f1.vis_vec_error()
+    f1.vis_vect_error()
 
 def vis_vectoring_file(filename):
     f1 = log_file(filename)
     f1.parse()
-    f1.vis_vec_inputs()
-    f1.vis_vec_error()
+    f1.vis_vect_inputs()
+    f1.vis_vect_error()
