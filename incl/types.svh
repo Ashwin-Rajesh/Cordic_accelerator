@@ -92,10 +92,22 @@ class Angle #(int p_WIDTH = 32);
     degVal = numToDeg(numVal);
     radVal = numToRad(numVal);
   endfunction
+
+  // Set real value (for hyperbolic)
+  function bit setReal(real inp);
+    numVal.setReal(inp);
+    degVal = numToDeg(numVal);
+    radVal = numToRad(numVal);
+  endfunction
   
   // Get binary value
   function NumType::FixedPoint getBin();
     return numVal.binVal;
+  endfunction
+
+  // Get real value (for hyperbolic)
+  function real getReal();
+    return numVal.realVal;
   endfunction
 
   // Convert number object to radian
