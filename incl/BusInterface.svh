@@ -3,7 +3,8 @@
 `define BUSINTERFACE_SVH
 
 interface BusInterface #(
-  parameter 	p_WIDTH = 32
+  parameter 	p_WIDTH = 32,
+  localparam 	p_LOG2_WIDTH = $clog2(p_WIDTH)
 );
 
   logic signed [p_WIDTH - 1 : 0] xInput;
@@ -15,7 +16,7 @@ interface BusInterface #(
   logic signed [p_WIDTH - 1 : 0] yResult;
   logic signed [p_WIDTH - 1 : 0] zResult;
   logic unsigned [p_WIDTH - 1 : 0] controlRegisterOutput;
-  logic unsigned [p_WIDTH - 1 : 0] controlRegisterMask;
+  logic unsigned controlRegisterWriteEnable;
 
   logic rst;
   logic clk;
@@ -23,12 +24,12 @@ interface BusInterface #(
 
   modport controller (
     input xInput, yInput, zInput, controlRegisterInput, clk, rst,
-    output xResult, yResult, zResult, controlRegisterOutput, controlRegisterMask, interrupt
+    output xResult, yResult, zResult, controlRegisterOutput, controlRegisterWriteEnable, interrupt
   );
 
   modport bus (
     output xInput, yInput, zInput, controlRegisterInput, clk, rst,
-    input xResult, yResult, zResult, controlRegisterOutput, controlRegisterMask, interrupt
+    input xResult, yResult, zResult, controlRegisterOutput, controlRegisterWriteEnable, interrupt
   );
 
 endinterface

@@ -1,0 +1,42 @@
+@startuml
+state idle {
+    state load : Load X, Y, Z, Control
+}
+
+state preCordic {
+    state rotationalSystem : is circular system or hyperbolic
+    state circular : |Z| < 90 deg
+    state hyperbolic : |Z| < 60 deg
+
+    state hyperbolicMode : is mode rotation or vectoring
+    state circularMode : is mode rotation or vectoring
+    rotationalSystem -> circularMode : ::rotationalSystem is high
+    circularMode -> circular : ::mode is high
+    rotationalSystem -up-> hyperbolicMode : ::rotationalSystem is low
+    hyperbolicMode -> hyperbolic : ::mode is high
+    hyperbolicMode -> hyperbolicVector : ::mode is low
+    state hyperbolicVector : X > 0 && |Y| < X  
+    state preRotation : Y = - Y, X = -X, Z = Z - 180 
+    circular --> preRotation : fail
+    state circularVector : X > 0
+    circularMode -> circularVector : ::mode is low
+    state circularPreVector : Z = - 180, X = -X, Y = -Y
+    circularVector --> circularPreVector : fail
+}
+
+hyperbolicVector -> postCordic : fail condition
+
+state Cordic {
+
+}
+
+state postCordic {
+
+}
+hyperbolic --> postCordic : failCondition
+idle --> rotationalSystem : rise ::start 
+idle -> idle : else
+preCordic -right-> Cordic 
+Cordic -left-> postCordic
+postCordic -up-> idle
+@enduml
