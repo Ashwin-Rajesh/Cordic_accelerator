@@ -10,33 +10,52 @@ state preCordic {
 
     state hyperbolicMode : is mode rotation or vectoring
     state circularMode : is mode rotation or vectoring
-    rotationalSystem -> circularMode : ::rotationalSystem is high
-    circularMode -> circular : ::mode is high
+    rotationalSystem -down-> circularMode : ::rotationalSystem is high
+    circularMode -right-> circular : ::mode is high
     rotationalSystem -up-> hyperbolicMode : ::rotationalSystem is low
-    hyperbolicMode -> hyperbolic : ::mode is high
-    hyperbolicMode -> hyperbolicVector : ::mode is low
+    hyperbolicMode -right-> hyperbolic : ::mode is high
+    hyperbolicMode -up-> hyperbolicVector : ::mode is low
     state hyperbolicVector : X > 0 && |Y| < X  
     state preRotation : Y = - Y, X = -X, Z = Z - 180 
     circular --> preRotation : fail
     state circularVector : X > 0
-    circularMode -> circularVector : ::mode is low
-    state circularPreVector : Z = - 180, X = -X, Y = -Y
+    circularMode -down-> circularVector : ::mode is low
+    state circularPreVector : Z = Z - 180, X = -X, Y = -Y
     circularVector --> circularPreVector : fail
 }
 
-hyperbolicVector -> postCordic : fail condition
+hyperbolicVector -left-> postCordic : fail condition
 
 state Cordic {
+    state initialize: flag::iter = 0; 
+    state cordicCompute : compute cordic process
+    state overflow : rais overflow flag and stop
+    state stop : stop due to control stop 
+    state update : flag::iter += 1
 
+    initialize -right-> cordicCompute : angle[flag::iter], dir = Z > 0 or Y > 0 for ::mode high or low
+    cordicCompute -up-> stop : ::stop
+    cordicCompute -right-> overflow : overflow in operation
+    cordicCompute -down-> update : no error
+    update -down-> initialize : flag::iter != ::iter
+    update -right-> postCordic : flag::iter == ::iter
+    stop -right-> postCordic
+    overflow -right-> postCordic
 }
 
+    circularPreVector --> initialize
+    preRotation --> initialize
+    hyperbolic --> initialize
+    hyperbolicVector -up-> initialize
+    circular --> initialize
+    circularVector --> initialize
 state postCordic {
 
 }
 hyperbolic --> postCordic : failCondition
-idle --> rotationalSystem : rise ::start 
-idle -> idle : else
-preCordic -right-> Cordic 
+idle -left-> rotationalSystem : rise ::start 
+idle -right-> idle : else
 Cordic -left-> postCordic
 postCordic -up-> idle
+
 @enduml
