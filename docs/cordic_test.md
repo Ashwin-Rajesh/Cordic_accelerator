@@ -177,4 +177,26 @@ Test summary
 ---------------------------------------------
 ```
 
+#### Log files
 
+Log files from the simulations are stored in the [```docs/data```](../docs/data) folder. They are arranged into 4 :
+
+- ```circ_rot```     : Circular rotation
+- ```circ_vect```    : Circular vectoring
+- ```hyp_rot```      : Hyperbolic rotation
+- ```hyp_vect```     : Hyperbolic vectoring
+
+Each file in the above forlders are named in the following format :
+
+```
+<c/h><r/v>_<num_cordic_iter>_<log_tests>_<log_iter>_x<num_tests>.txt
+```
+
+For example, ```hr_10_off_off_x500.txt``` can be decoded as
+
+- ```h``` : Hyperbolic
+- ```r``` : Rotation
+- ```10``` : 10 CORDIC iterations
+- ```off``` : No test wise logs
+- ```off``` : Not CORDIC iteration wise logs
+- ```500``` : 500 random tests

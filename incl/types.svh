@@ -23,14 +23,14 @@ class Number #(int p_WIDTH = 32, int p_INT_BITS = 0);
   endfunction
   
   // Set from a real input value
-  function setReal(real inp);
+  function void setReal(real inp);
   	realVal = inp;
     binVal = realToBin(inp);
   endfunction
   
   // Set from a binary input value
-  function setBin(FixedPoint inp);
-	binVal = inp;
+  function void setBin(FixedPoint inp);
+	  binVal = inp;
     realVal = binToReal(inp);
   endfunction
   
@@ -70,25 +70,32 @@ class Angle #(int p_WIDTH = 32);
   endfunction
   
   // Set from degree value
-  function bit setDeg(real inp);
-    if(inp < -180 || inp > 180)
-      return 0;
+  function void setDeg(real inp);
+    // if(inp < -180 || inp > 180)
+    //   return 0;
     numVal = degToNum(inp);
     degVal = numToDeg(numVal);
     radVal = numToRad(numVal);
-    return 1;
+    // return 1;
   endfunction
   
   // Set from radian value
-  function bit setRad(real inp);
+  function void setRad(real inp);
     numVal = radToNum(inp);
     degVal = numToDeg(numVal);
     radVal = numToRad(numVal);
   endfunction
   
   // Set from binary value
-  function bit setBin(NumType::FixedPoint inp);
+  function void setBin(NumType::FixedPoint inp);
     numVal.setBin(inp);
+    degVal = numToDeg(numVal);
+    radVal = numToRad(numVal);
+  endfunction
+
+  // Set real value (for hyperbolic)
+  function void setReal(real inp);
+    numVal.setReal(inp);
     degVal = numToDeg(numVal);
     radVal = numToRad(numVal);
   endfunction
@@ -96,6 +103,11 @@ class Angle #(int p_WIDTH = 32);
   // Get binary value
   function NumType::FixedPoint getBin();
     return numVal.binVal;
+  endfunction
+
+  // Get real value (for hyperbolic)
+  function real getReal();
+    return numVal.realVal;
   endfunction
 
   // Convert number object to radian
