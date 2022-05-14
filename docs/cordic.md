@@ -71,7 +71,7 @@ The sign of ```deltaX```, ```deltaY``` and ```deltaZ``` depend on direction of r
 | Hyperbolic (1)    | - (0)         | - | - | + |
 | Hyperbolic (1)    | + (1)         | + | + | - |
 | Circular (1)      | - (0)         | + | - | + |
-| Circular (1)      | + (1)         | - | + | + |
+| Circular (1)      | + (1)         | - | + | - |
 
 So, effectively, these are the equations for the results (and for CORDIC rotations) :
 
@@ -79,8 +79,8 @@ So, effectively, these are the equations for the results (and for CORDIC rotatio
 |:---:              |:---:          |:---:|:---:|:---:|
 | Hyperbolic (1)    | - (0)         | ```xPrev - (xPrev >>> shiftAmount)``` | ```yPrev - (yPrev >>> shiftAmount)``` | ```zPrev + rotationAngle``` |
 | Hyperbolic (1)    | + (1)         | ```xPrev + (xPrev >>> shiftAmount)``` | ```yPrev + (yPrev >>> shiftAmount)``` | ```zPrev - rotationAngle``` |
-| Circular (1)      | - (0)         | ```xPrev + (xPrev >>> shiftAmount)``` | ```yPrev - (yPrev >>> shiftAmount)``` | ```zPrev + rotationAngle``` |
-| Circular (1)      | + (1)         | ```xPrev - (xPrev >>> shiftAmount)``` | ```yPrev + (yPrev >>> shiftAmount)``` | ```zPrev + rotationAngle``` |
+| Circular (1)      | - (0)         | ```xPrev + (xPrev >>> shiftAmount)``` | ```yPrev + (yPrev >>> shiftAmount)``` | ```zPrev - rotationAngle``` |
+| Circular (1)      | + (1)         | ```xPrev - (xPrev >>> shiftAmount)``` | ```yPrev - (yPrev >>> shiftAmount)``` | ```zPrev + rotationAngle``` |
 
 Each of these additions can overflow, and if they do, they are reported using active high signals, ```xOverflow```, ```yOverflow``` and ```zOverflow```
 
