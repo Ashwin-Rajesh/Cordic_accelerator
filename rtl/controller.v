@@ -318,5 +318,15 @@ module Controller #(
         end
     end
 
-    
+    always @ (posedge clk) begin
+        
+        controllerState <= nextState;
+        controlRegister <= nextControlRegister;
+        xValue <= nextX;
+        yValue <= nextY;
+        zValue <= nextZ;
+        contrlWriteEn <= nextCntrlWrEn;
+        interrupt <= nextInt;
+        rotationDir <= nextRotDir;
+    end
 endmodule
