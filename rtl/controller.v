@@ -5,8 +5,8 @@
 
     // Control  0       : Start
     //          1       : Stop
-    //          2       : p_ROTATION Mode
-    //          3       : p_ROTATION System 
+    //          2       : Rotation Mode
+    //          3       : Rotation System 
     //          4       : Error Interrupt Enable
     //          5       : Result Interrupt Enable
     //          6       : Overflow Stop Enable
@@ -251,6 +251,7 @@ module Controller #(
 
                     if(busPort.controlRegisterInput[p_CNTRL_STOP]) begin
                         nextState = p_POST_C;
+                        nextControlRegister[p_CNTRL_STOP] = 0;
                     end
 
                     if(controlRegister[p_CNTRL_OV_ST_EN]) begin
@@ -268,9 +269,54 @@ module Controller #(
                     end
                 end
 
-                
+                p_POST_C: begin
+                    // ControlRegister : Upper 16 Flags
+                    //                 : Lower 16 Control Bits
+
+                    // Control  0       : Start
+                    //          1       : Stop
+                    //          2       : Rotation Mode
+                    //          3       : Rotation System 
+                    //          4       : Error Interrupt Enable
+                    //          5       : Result Interrupt Enable
+                    //          6       : Overflow Stop Enable
+                    //          7       : Z Overflow stop Enable
+                    //          12, 8   : Number of Iteration
+
+                    // Flags    16      : Ready
+                    //          17      : Input Error
+                    //          18      : Overflow Error
+                    //          19      : X Overflow 
+                    //          20      : Y Overflow
+                    //          21      : Z Overflow
+                    //          26, 22  : Iterations Elapsed
+                    //          31, 27  : Overflow Iteration
+                    nextState = p_IDLE;
+                    if (
+                        (
+                            (
+                                (
+                                    controlRegister[p_CNTRL_OV_ST_EN] and (
+                                        controlRegister[p_FLAG_X_OV_ERR] or controlRegister[p_FLAG_Y_OV_ERR]
+                                        or (
+                                            controlRegister[p_CNTRL_Z_OV_ST_EN] and controlRegister[p_FLAG_Z_OV_ERR]
+                                        )
+                                    )
+                                ) or controlRegister[p_FLAG_INP_ERR]
+                            ) and controlRegister[p_CNTRL_ERR_INT_EN] 
+                        ) or controlRegister[p_CNTRL_RSLT_INT_EN]
+                    ) begin
+                        nextInt = 1;
+                    end
+
+                    nextCntrlWrEn = 1;
+
+                end
+
                 default: 
             endcase 
         end
     end
+
+    
 endmodule
