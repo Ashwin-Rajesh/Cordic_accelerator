@@ -1,4 +1,6 @@
 `include "BusInterface.svh"
+`include "cordic_if.svh"
+`include "LutInterface.svh"
 
     // ControlRegister : Upper 16 Flags
     //                 : Lower 16 Control Bits
@@ -30,9 +32,7 @@ module Controller #(
 ) (
     BusInterface.controller                 busPort,
     CordicInterface.controller              cordicPort,
-    output wire [p_ANGLE_ADDR_WIDTH - 1:0]  lutOffset, 
-    input wire [p_WIDTH - 1:0]              lutAngle, 
-    output wire                             lutSystem
+    LutInterface.controller                 lutPort
 );
 
     localparam p_IDLE = 2'b00;
@@ -110,11 +110,11 @@ module Controller #(
     assign busPort.controlRegisterWriteEnable = contrlWriteEn;
     assign busPort.interrupt = interrupt;
 
-    assign lutOffset = controlRegister[p_FLAG_ELAPS_ITER_H:p_FLAG_ELAPS_ITER_L];
-    assign lutSystem = controlRegister[p_CNTRL_ROT_SYS];
+    assign lutPort.lutOffset = controlRegister[p_FLAG_ELAPS_ITER_H:p_FLAG_ELAPS_ITER_L];
+    assign lutPort.lutSystem = controlRegister[p_CNTRL_ROT_SYS];
 
     assign p_CORDICPort.rotationSystem = controlRegister[p_CNTRL_ROT_SYS];
-    assign p_CORDICPort.rotationAngle = lutAngle;
+    assign p_CORDICPort.rotationAngle = lutPort.lutAngle;
     assign p_CORDICPort.shiftAmount = controlRegister[p_FLAG_ELAPS_ITER_H:p_FLAG_ELAPS_ITER_L];
 
     assign p_CORDICPort.rotationDir = rotationDir;
@@ -268,27 +268,6 @@ module Controller #(
                 end
 
                 p_POST_C: begin
-                    // ControlRegister : Upper 16 Flags
-                    //                 : Lower 16 Control Bits
-
-                    // Control  0       : Start
-                    //          1       : Stop
-                    //          2       : Rotation Mode
-                    //          3       : Rotation System 
-                    //          4       : Error Interrupt Enable
-                    //          5       : Result Interrupt Enable
-                    //          6       : Overflow Stop Enable
-                    //          7       : Z Overflow stop Enable
-                    //          12, 8   : Number of Iteration
-
-                    // Flags    16      : Ready
-                    //          17      : Input Error
-                    //          18      : Overflow Error
-                    //          19      : X Overflow 
-                    //          20      : Y Overflow
-                    //          21      : Z Overflow
-                    //          26, 22  : Iterations Elapsed
-                    //          31, 27  : Overflow Iteration
                     nextState = p_IDLE;
                     if (
                         (
