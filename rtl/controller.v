@@ -28,9 +28,11 @@ module Controller #(
     parameter   p_HALFWORD = 16,
     parameter   p_ANGLE_ADDR_WIDTH = 5
 ) (
-    BusInterface.controller busPort,
-    CordicInterface.controller cordicPort,
-    lutOffset, lutAngle, lutSystem
+    BusInterface.controller                 busPort,
+    CordicInterface.controller              cordicPort,
+    output wire [p_ANGLE_ADDR_WIDTH - 1:0]  lutOffset, 
+    input wire [p_WIDTH - 1:0]              lutAngle, 
+    output wire                             lutSystem
 );
 
     localparam p_IDLE = 2'b00;
@@ -67,10 +69,6 @@ module Controller #(
     localparam p_FLAG_ELAPS_ITER_H = 26;
     localparam p_FLAG_OV_ITER_L = 27;
     localparam p_FLAG_OV_ITER_H = 31;
-
-    input [p_WIDTH - 1 : 0 ] lutAngle;
-    output wire [p_ANGLE_ADDR_WIDTH - 1:0] lutOffset;
-    output wire lutSystem;
 
     reg [1:0] controllerState = p_IDLE;
     reg [1:0] nextState;
