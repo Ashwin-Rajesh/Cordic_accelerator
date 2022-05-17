@@ -59,4 +59,4 @@ interface BusInterface #(
 
 endinterface
 
-`endif BUSINTERFACE_SVH
+`endif
