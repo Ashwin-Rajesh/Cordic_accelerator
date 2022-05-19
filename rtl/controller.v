@@ -48,8 +48,8 @@ module Controller #(
     localparam p_RIGHT_ANGLE = 32'h40000000;
     localparam p_LOW_ANGLE = 32'h80000000;
 
-    localparam p_CNTRL_START = 0;
-    localparam p_CNTRL_STOP = 1;
+    localparam p_CNTRL_START = 1'b0;
+    localparam p_CNTRL_STOP = 1'b1;
     localparam p_CNTRL_ROT_MODE = 2;
     localparam p_CNTRL_ROT_SYS = 3;
     localparam p_CNTRL_ERR_INT_EN = 4;
@@ -75,7 +75,7 @@ module Controller #(
     reg [31:0] nextControlRegister;
 
     reg [31 : 0] controlRegister = {
-        5'b0, 5'b0, 0, 0, 0, 0, 0, 1, 3'b0, 5'd31, 1, 1, 1, 1, 0, 0, 0, 0
+        5'b0, 5'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1, 3'b0, 5'd31, 1'b1, 1'b1, 1'b1, 1'b1, 1'b0, 1'b0, 1'b0, 1'b0
     };
 
     reg [p_WIDTH - 1 : 0] xValue = 32'h0;
@@ -92,7 +92,7 @@ module Controller #(
     reg contrlWriteEn = 1'b0;
     reg interrupt = 1'b0;
 
-    reg rotationDir = 0;
+    reg rotationDir = 1'b0;
 
     reg [p_WIDTH - 1 : 0] nextX, nextY, nextZ;
     reg nextCntrlWrEn;
@@ -113,14 +113,14 @@ module Controller #(
     assign lutPort.lutOffset = controlRegister[p_FLAG_ELAPS_ITER_H:p_FLAG_ELAPS_ITER_L];
     assign lutPort.lutSystem = controlRegister[p_CNTRL_ROT_SYS];
 
-    assign p_CORDICPort.rotationSystem = controlRegister[p_CNTRL_ROT_SYS];
-    assign p_CORDICPort.rotationAngle = lutPort.lutAngle;
-    assign p_CORDICPort.shiftAmount = controlRegister[p_FLAG_ELAPS_ITER_H:p_FLAG_ELAPS_ITER_L];
+    assign cordicPort.rotationSystem = controlRegister[p_CNTRL_ROT_SYS];
+    assign cordicPort.rotationAngle = lutPort.lutAngle;
+    assign cordicPort.shiftAmount = controlRegister[p_FLAG_ELAPS_ITER_H:p_FLAG_ELAPS_ITER_L];
 
-    assign p_CORDICPort.rotationDir = rotationDir;
-    assign p_CORDICPort.xPrev = xValue;
-    assign p_CORDICPort.yPrev = yValue;
-    assign p_CORDICPort.zPrev = zValue;
+    assign cordicPort.rotationDir = rotationDir;
+    assign cordicPort.xPrev = xValue;
+    assign cordicPort.yPrev = yValue;
+    assign cordicPort.zPrev = zValue;
 
     wire clk;
     assign clk = busPort.clk;
@@ -141,7 +141,7 @@ module Controller #(
         if (busPort.rst) begin
 
             nextControlRegister = {
-                5'b0, 5'b0, 0, 0, 0, 0, 0, 1, 3'b0, 5'd31, 1, 1, 1, 1, 0, 0, 0, 0
+                5'b0, 5'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b1, 3'b0, 5'd31, 1'b1, 1'b1, 1'b1, 1'b1, 1'b0, 1'b0, 1'b0, 1'b0
             };
 
             nextX = 32'h0;
@@ -150,7 +150,7 @@ module Controller #(
             nextCntrlWrEn = 1'b1;
             nextInt = 1'b0;
 
-            nextRotDir = 0;
+            nextRotDir = 1'b0;
 
             nextState = p_IDLE;
         end else begin
@@ -168,7 +168,7 @@ module Controller #(
                         nextZ = busPort.zInput;
 
                         nextControlRegister = {
-                            5'b0, 5'b0, 0, 0, 0, 0, 0, 0, 3'b0, 
+                            5'b0, 5'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 3'b0, 
                             busPort.controlRegisterInput[p_CNTRL_ITER_H : p_CNTRL_ITER_L], 
                             busPort.controlRegisterInput[p_CNTRL_Z_OV_ST_EN], 
                             busPort.controlRegisterInput[p_CNTRL_OV_ST_EN],
@@ -176,12 +176,12 @@ module Controller #(
                             busPort.controlRegisterInput[p_CNTRL_ERR_INT_EN], 
                             busPort.controlRegisterInput[p_CNTRL_ROT_SYS], 
                             busPort.controlRegisterInput[p_CNTRL_ROT_MODE], 
-                            0, 0
+                            1'b0, 1'b0
                         };
                         
-                        nextCntrlWrEn = 1;
+                        nextCntrlWrEn = 1'b1;
 
-                        nextRotDir = 0;
+                        nextRotDir = 1'b0;
 
                         nextState = p_PRE_C;
                                                 
@@ -189,7 +189,7 @@ module Controller #(
                 end
 
                 p_PRE_C: begin
-                    nextCntrlWrEn = 0;
+                    nextCntrlWrEn = 1'b0;
                     
                     nextRotDir = controlRegister[p_CNTRL_ROT_MODE];
                     nextState = p_CORDIC;
@@ -217,8 +217,8 @@ module Controller #(
                     end
 
                     if (~controlRegister[p_CNTRL_ROT_SYS]) begin
-                        if(xValue[31] or (absY > xValue)) begin
-                            nextControlRegister[p_FLAG_INP_ERR] = 1;
+                        if(xValue[31] || (absY > xValue)) begin
+                            nextControlRegister[p_FLAG_INP_ERR] = 1'b1;
                             nextState = p_POST_C;
                         end
                     end
@@ -228,11 +228,11 @@ module Controller #(
                 p_CORDIC: begin
 
                     nextControlRegister[p_FLAG_ELAPS_ITER_H:p_FLAG_ELAPS_ITER_L] 
-                            = controlRegister[p_FLAG_ELAPS_ITER_H:p_FLAG_ELAPS_ITER_L] + 1;
+                            = controlRegister[p_FLAG_ELAPS_ITER_H:p_FLAG_ELAPS_ITER_L] + 1'b1;
 
                     if(~controlRegister[p_FLAG_OV_ERR]) begin
                         nextControlRegister[p_FLAG_OV_ITER_H:p_FLAG_OV_ITER_L]
-                                = controlRegister[p_FLAG_OV_ITER_H:p_FLAG_OV_ITER_L] + 1;
+                                = controlRegister[p_FLAG_OV_ITER_H:p_FLAG_OV_ITER_L] + 1'b1;
                     end
                     
                     nextX = cordicPort.xResult;
@@ -242,21 +242,21 @@ module Controller #(
                     nextControlRegister[p_FLAG_Y_OV_ERR] = cordicPort.yOverflow;
                     nextControlRegister[p_FLAG_Z_OV_ERR] = cordicPort.zOverflow;
                     nextControlRegister[p_FLAG_OV_ERR] 
-                        = nextControlRegister[p_FLAG_X_OV_ERR] or nextControlRegister[p_FLAG_Y_OV_ERR]
-                            or nextControlRegister[p_FLAG_Z_OV_ERR];
+                        = nextControlRegister[p_FLAG_X_OV_ERR] || nextControlRegister[p_FLAG_Y_OV_ERR]
+                            || nextControlRegister[p_FLAG_Z_OV_ERR];
 
                     nextState = p_CORDIC;
 
                     if(busPort.controlRegisterInput[p_CNTRL_STOP]) begin
                         nextState = p_POST_C;
-                        nextControlRegister[p_CNTRL_STOP] = 0;
+                        nextControlRegister[p_CNTRL_STOP] = 1'b0;
                     end
 
                     if(controlRegister[p_CNTRL_OV_ST_EN]) begin
-                        if(controlRegister[p_FLAG_X_OV_ERR] or controlRegister[p_FLAG_Y_OV_ERR]) begin
+                        if(controlRegister[p_FLAG_X_OV_ERR] || controlRegister[p_FLAG_Y_OV_ERR]) begin
                             nextState = p_POST_C;
                         end
-                        if(controlRegister[p_CNTRL_Z_OV_ST_EN] and controlRegister[p_FLAG_Z_OV_ERR]) begin
+                        if(controlRegister[p_CNTRL_Z_OV_ST_EN] && controlRegister[p_FLAG_Z_OV_ERR]) begin
                             nextState = p_POST_C;
                         end
                     end
@@ -273,24 +273,20 @@ module Controller #(
                         (
                             (
                                 (
-                                    controlRegister[p_CNTRL_OV_ST_EN] and (
-                                        controlRegister[p_FLAG_X_OV_ERR] or controlRegister[p_FLAG_Y_OV_ERR]
-                                        or (
-                                            controlRegister[p_CNTRL_Z_OV_ST_EN] and controlRegister[p_FLAG_Z_OV_ERR]
+                                    controlRegister[p_CNTRL_OV_ST_EN] && (
+                                        controlRegister[p_FLAG_X_OV_ERR] || controlRegister[p_FLAG_Y_OV_ERR]
+                                        || (
+                                            controlRegister[p_CNTRL_Z_OV_ST_EN] && controlRegister[p_FLAG_Z_OV_ERR]
                                         )
                                     )
-                                ) or controlRegister[p_FLAG_INP_ERR]
-                            ) and controlRegister[p_CNTRL_ERR_INT_EN] 
-                        ) or controlRegister[p_CNTRL_RSLT_INT_EN]
+                                ) || controlRegister[p_FLAG_INP_ERR]
+                            ) && controlRegister[p_CNTRL_ERR_INT_EN] 
+                        ) || controlRegister[p_CNTRL_RSLT_INT_EN]
                     ) begin
-                        nextInt = 1;
+                        nextInt = 1'b1;
                     end
-
-                    nextCntrlWrEn = 1;
-
+                    nextCntrlWrEn = 1'b1;
                 end
-
-                default: 
             endcase 
         end
     end
