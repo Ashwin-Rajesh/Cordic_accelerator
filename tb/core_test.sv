@@ -16,7 +16,7 @@ module testbench;
   localparam int p_CORDIC_NUM_ITER = 30;	// Number of CORDIC iterations
   
   localparam bit p_CORDIC_SYSTEM = 1;	    // 1 : Circular,   	0 : Hyperbolic
-  localparam bit p_CORDIC_MODE = 1;				// 1 : Rotation, 	0 : Vectoring
+  localparam bit p_CORDIC_MODE = 0;				// 1 : Rotation, 	0 : Vectoring
   
   localparam p_INT_BITS = p_CORDIC_SYSTEM ? 0 : 3; // Number of bits for integer part
 
@@ -174,9 +174,9 @@ module testbench;
           // Circular vectoring
           xExp = (xInitNum.realVal ** 2 + yInitNum.realVal ** 2) ** 0.5 / p_CIRC_FACTOR;
           yExp = 0;
-          zExp = zInitAngle.degVal + ($atan2(yInitNum.realVal, xInitNum.realVal) * 180 / $acos(-1));
-          
-          if($abs(zExp) > 100 && p_LIMIT_INPUTS) begin                                  // Expected angle < 100 degrees
+          zExp = degreeWrap(zInitAngle.degVal + ($atan2(yInitNum.realVal, xInitNum.realVal) * 180 / $acos(-1)));
+
+          if($abs($atan2(yInitNum.realVal, xInitNum.realVal) * 180 / $acos(-1)) > 100 && p_LIMIT_INPUTS) begin                                  // Expected angle < 100 degrees
             if(p_LOG_TESTS) $display("abs(expected ang) < 100 for circular vectoring");
             iTest--;
             continue;
@@ -248,12 +248,10 @@ module testbench;
         if(sequencer.iterate()) begin
           if(p_LOG_TESTS) $display("Overflow detected after iteration %2d", iIter);
 
-          xOverflow = sequencer.monitor.xOverflow;
-          yOverflow = sequencer.monitor.yOverflow;
-          zOverflow = sequencer.monitor.zOverflow;
+          if(sequencer.monitor.xOverflow) xOverflow = 1;
+          if(sequencer.monitor.yOverflow) yOverflow = 1;
+          if(sequencer.monitor.zOverflow) zOverflow = 1;
           overflowIter = iIter;
-
-          break;
         end
         #1;
       end
@@ -287,7 +285,7 @@ module testbench;
       xErrorHist.push_back($abs(sequencer.xNum.realVal - xExp));
       yErrorHist.push_back($abs(sequencer.yNum.realVal - yExp));
       if(p_CORDIC_SYSTEM)
-        zErrorHist.push_back($abs(sequencer.zAng.degVal - zExp));
+        zErrorHist.push_back(degreeWrap($abs(sequencer.zAng.degVal - zExp)));
       else
         zErrorHist.push_back($abs(sequencer.zAng.getReal() - zExp));
 
@@ -332,6 +330,15 @@ module testbench;
       return 1.0/0;
     else
       return temp[0];
+  endfunction
+
+  // Convert to -180-180 degree range
+  function real degreeWrap(real inp);
+    if(inp > 180)
+      return inp - 360;
+    if(inp < -180)
+      return inp + 360;
+    return inp;
   endfunction
 endmodule
 
