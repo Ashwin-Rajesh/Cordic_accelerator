@@ -48,34 +48,34 @@ module Controller #(
     localparam p_RIGHT_ANGLE = 32'h40000000;
     localparam p_LOW_ANGLE = 32'h80000000;
 
-    localparam p_CNTRL_START = 1'b0;
-    localparam p_CNTRL_STOP = 1'b1;
-    localparam p_CNTRL_ROT_MODE = 2;
-    localparam p_CNTRL_ROT_SYS = 3;
-    localparam p_CNTRL_ERR_INT_EN = 4;
-    localparam p_CNTRL_RSLT_INT_EN = 5;
-    localparam p_CNTRL_OV_ST_EN = 6;
-    localparam p_CNTRL_Z_OV_ST_EN = 7;
-    localparam p_CNTRL_ITER_L = 8;
-    localparam p_CNTRL_ITER_H = 12;
+    localparam p_CNTRL_START        = 0;
+    localparam p_CNTRL_STOP         = 1;
+    localparam p_CNTRL_ROT_MODE     = 2;
+    localparam p_CNTRL_ROT_SYS      = 3;
+    localparam p_CNTRL_ERR_INT_EN   = 4;
+    localparam p_CNTRL_RSLT_INT_EN  = 5;
+    localparam p_CNTRL_OV_ST_EN     = 6;
+    localparam p_CNTRL_Z_OV_ST_EN   = 7;
+    localparam p_CNTRL_ITER_L       = 8;
+    localparam p_CNTRL_ITER_H       = 12;
     
-    localparam p_FLAG_READY = 16;
-    localparam p_FLAG_INP_ERR = 17;
-    localparam p_FLAG_OV_ERR = 18;
-    localparam p_FLAG_X_OV_ERR = 19;
-    localparam p_FLAG_Y_OV_ERR = 20;
-    localparam p_FLAG_Z_OV_ERR = 21;
-    localparam p_FLAG_ELAPS_ITER_L = 22;
-    localparam p_FLAG_ELAPS_ITER_H = 26;
-    localparam p_FLAG_OV_ITER_L = 27;
-    localparam p_FLAG_OV_ITER_H = 31;
+    localparam p_FLAG_READY         = 16;
+    localparam p_FLAG_INP_ERR       = 17;
+    localparam p_FLAG_OV_ERR        = 18;
+    localparam p_FLAG_X_OV_ERR      = 19;
+    localparam p_FLAG_Y_OV_ERR      = 20;
+    localparam p_FLAG_Z_OV_ERR      = 21;
+    localparam p_FLAG_ELAPS_ITER_L  = 22;
+    localparam p_FLAG_ELAPS_ITER_H  = 26;
+    localparam p_FLAG_OV_ITER_L     = 27;
+    localparam p_FLAG_OV_ITER_H     = 31;
 
     reg [1:0] controllerState = p_IDLE;
     reg [1:0] nextState;
     reg [31:0] nextControlRegister;
 
     reg [31 : 0] controlRegister = {
-        5'b0, 5'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1, 3'b0, 5'd31, 1'b1, 1'b1, 1'b1, 1'b1, 1'b0, 1'b0, 1'b0, 1'b0
+        5'b0, 5'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b1, 3'b0, 5'd31, 1'b1, 1'b1, 1'b1, 1'b1, 1'b0, 1'b0, 1'b0, 1'b0
     };
 
     reg [p_WIDTH - 1 : 0] xValue = 32'h0;
@@ -168,15 +168,24 @@ module Controller #(
                         nextZ = busPort.zInput;
 
                         nextControlRegister = {
-                            5'b0, 5'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 3'b0, 
-                            busPort.controlRegisterInput[p_CNTRL_ITER_H : p_CNTRL_ITER_L], 
-                            busPort.controlRegisterInput[p_CNTRL_Z_OV_ST_EN], 
-                            busPort.controlRegisterInput[p_CNTRL_OV_ST_EN],
-                            busPort.controlRegisterInput[p_CNTRL_RSLT_INT_EN], 
-                            busPort.controlRegisterInput[p_CNTRL_ERR_INT_EN], 
-                            busPort.controlRegisterInput[p_CNTRL_ROT_SYS], 
-                            busPort.controlRegisterInput[p_CNTRL_ROT_MODE], 
-                            1'b0, 1'b0
+                            5'b0,                                                           // Overflow iteration
+                            5'b0,                                                           // Iteration elapsed
+                            1'b0,                                                           // Z overflow
+                            1'b0,                                                           // Y overflow
+                            1'b0,                                                           // X overflow
+                            1'b0,                                                           // Overflow Error
+                            1'b0,                                                           // Input Error
+                            1'b0,                                                           // Error
+                            3'b0,                                                           // Ready
+                            busPort.controlRegisterInput[p_CNTRL_ITER_H : p_CNTRL_ITER_L],  // Number of iterations
+                            busPort.controlRegisterInput[p_CNTRL_Z_OV_ST_EN],               // z overflow stop enable
+                            busPort.controlRegisterInput[p_CNTRL_OV_ST_EN],                 // Overflow stop enable
+                            busPort.controlRegisterInput[p_CNTRL_RSLT_INT_EN],              // Result interrupt enable
+                            busPort.controlRegisterInput[p_CNTRL_ERR_INT_EN],               // Error interrupt enable
+                            busPort.controlRegisterInput[p_CNTRL_ROT_SYS],                  // Rotation system (1 for circ, 0 for hyp)
+                            busPort.controlRegisterInput[p_CNTRL_ROT_MODE],                 // Rotation mode (1 for rot, 0 for vect)
+                            1'b0,                                                           // Stop
+                            1'b0                                                            // Start
                         };
                         
                         nextCntrlWrEn = 1'b1;
@@ -265,6 +274,7 @@ module Controller #(
                         == nextControlRegister[p_FLAG_ELAPS_ITER_H:p_FLAG_ELAPS_ITER_L]) begin
                         nextState = p_POST_C;
                     end
+
                 end
 
                 p_POST_C: begin
@@ -286,6 +296,8 @@ module Controller #(
                         nextInt = 1'b1;
                     end
                     nextCntrlWrEn = 1'b1;
+
+                    nextControlRegister[p_FLAG_READY] = 1'b1;
                 end
             endcase 
         end
