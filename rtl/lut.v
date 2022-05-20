@@ -75,6 +75,7 @@ module lut #(
     32'h00000000,
     32'h00000000
   };
-
-  assign intf.lutAngle = intf.lutSystem ? aTanLut[intf.lutOffset] : aTanhLut[intf.lutOffset];
+  wire[p_ANGLE_ADDR_WIDTH-1:0] offset = intf.lutOffset;
+  
+  assign intf.lutAngle = intf.lutSystem ? aTanLut[offset] : aTanhLut[offset];
 endmodule
