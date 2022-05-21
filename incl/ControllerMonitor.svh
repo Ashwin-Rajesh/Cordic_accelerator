@@ -17,9 +17,9 @@ class ControllerMonitor #(parameter width =  32, parameter int_width = 0);
   NumType  yInp;        // y input value
   AngType  zInp;        // angle input value
   
-  virtual BusInterface intf;
+  virtual BusInterface.bus intf;
   
-  function new(virtual BusInterface inpIntf);
+  function new(virtual BusInterface.bus inpIntf);
     // Initialize internal variables
     xOut = new(0);
     yOut = new(0);
