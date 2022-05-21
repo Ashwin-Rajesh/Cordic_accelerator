@@ -181,14 +181,14 @@ module Controller #(
             if (controlRegister[p_CNTRL_ROT_MODE]) begin
               if (zValue[p_WIDTH-1] ? zValue < -p_RIGHT_ANGLE: zValue > p_RIGHT_ANGLE) begin
                 nextZ = rotZ;
-                nextX = negX;
-                nextY = negY;
+                nextX = negY;
+                nextY = negX;
               end
             end else begin
               if(xValue[31]) begin
                 nextZ = rotZ;
-                nextX = negX;
-                nextY = negY;
+                nextX = negY;
+                nextY = negX;
               end
             end
           end
