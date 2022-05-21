@@ -215,12 +215,12 @@ module Controller #(
                     nextX = cordicPort.xResult;
                     nextY = cordicPort.yResult;
                     nextZ = cordicPort.zResult;
-                    nextControlRegister[p_FLAG_X_OV_ERR] = cordicPort.xOverflow;
-                    nextControlRegister[p_FLAG_Y_OV_ERR] = cordicPort.yOverflow;
-                    nextControlRegister[p_FLAG_Z_OV_ERR] = cordicPort.zOverflow;
-                    nextControlRegister[p_FLAG_OV_ERR] 
-                        = nextControlRegister[p_FLAG_X_OV_ERR] || nextControlRegister[p_FLAG_Y_OV_ERR]
-                            || nextControlRegister[p_FLAG_Z_OV_ERR];
+                    
+                    if(~controlRegister[p_FLAG_X_OV_ERR]) nextControlRegister[p_FLAG_X_OV_ERR] = cordicPort.xOverflow;
+                    if(~controlRegister[p_FLAG_Y_OV_ERR]) nextControlRegister[p_FLAG_Y_OV_ERR] = cordicPort.yOverflow;
+                    if(~controlRegister[p_FLAG_Z_OV_ERR]) nextControlRegister[p_FLAG_Z_OV_ERR] = cordicPort.zOverflow;
+                    if(~controlRegister[p_FLAG_OV_ERR])   
+                        nextControlRegister[p_FLAG_OV_ERR] = nextControlRegister[p_FLAG_X_OV_ERR] || nextControlRegister[p_FLAG_Y_OV_ERR] || nextControlRegister[p_FLAG_Z_OV_ERR];
 
                     nextState = p_CORDIC;
 
