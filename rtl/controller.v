@@ -92,12 +92,9 @@ module Controller #(
     reg contrlWriteEn = 1'b0;
     reg interrupt = 1'b0;
 
-    reg rotationDir = 1'b0;
-
     reg [p_WIDTH - 1 : 0] nextX, nextY, nextZ;
     reg nextCntrlWrEn;
     reg nextInt;
-    reg nextRotDir;
 
     wire [p_HALFWORD - 1 : 0] flagUpper;
     wire [p_HALFWORD - 1 : 0] controlLower;
@@ -117,7 +114,8 @@ module Controller #(
     assign cordicPort.rotationAngle = lutPort.lutAngle;
     assign cordicPort.shiftAmount = controlRegister[p_FLAG_ELAPS_ITER_H:p_FLAG_ELAPS_ITER_L];
 
-    assign cordicPort.rotationDir = rotationDir;
+    // assign cordicPort.rotationDir = rotationDir;
+    assign cordicPort.rotationDir = controlRegister[p_CNTRL_ROT_MODE] ? ~cordicPort.zPrev[p_WIDTH-1] : cordicPort.yPrev[p_WIDTH-1];
     assign cordicPort.xPrev = xValue;
     assign cordicPort.yPrev = yValue;
     assign cordicPort.zPrev = zValue;
@@ -134,8 +132,6 @@ module Controller #(
         nextCntrlWrEn = contrlWriteEn;
         nextInt = interrupt;
 
-        nextRotDir = rotationDir;
-
         nextState = controllerState;
 
         if (busPort.rst) begin
@@ -149,8 +145,6 @@ module Controller #(
             nextZ = 32'h0;
             nextCntrlWrEn = 1'b1;
             nextInt = 1'b0;
-
-            nextRotDir = 1'b0;
 
             nextState = p_IDLE;
         end else begin
@@ -190,8 +184,6 @@ module Controller #(
                         
                         nextCntrlWrEn = 1'b1;
 
-                        nextRotDir = 1'b0;
-
                         nextState = p_PRE_C;
                                                 
                     end
@@ -200,7 +192,6 @@ module Controller #(
                 p_PRE_C: begin
                     nextCntrlWrEn = 1'b0;
                     
-                    nextRotDir = controlRegister[p_CNTRL_ROT_MODE];
                     nextState = p_CORDIC;
                     
                     if(controlRegister[p_CNTRL_ROT_SYS]) begin
@@ -312,6 +303,5 @@ module Controller #(
         zValue <= nextZ;
         contrlWriteEn <= nextCntrlWrEn;
         interrupt <= nextInt;
-        rotationDir <= nextRotDir;
     end
 endmodule
