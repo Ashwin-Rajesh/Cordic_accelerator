@@ -1,30 +1,29 @@
 `include "BusInterface.svh"
-`include "cordic_if.svh"
+`include "CordicInterface.svh"
 `include "LutInterface.svh"
 
-    // ControlRegister : Upper 16 Flags
-    //                 : Lower 16 Control Bits
+// ControlRegister : Upper 16 Flags
+//                 : Lower 16 Control Bits
 
-    // Control  0       : Start
-    //          1       : Stop
-    //          2       : Rotation Mode
-    //          3       : Rotation System 
-    //          4       : Error Interrupt Enable
-    //          5       : Result Interrupt Enable
-    //          6       : Overflow Stop Enable
-    //          7       : Z Overflow stop Enable
-    //          12, 8   : Number of Iteration
+// Control  0       : Start
+//          1       : Stop
+//          2       : Rotation Mode
+//          3       : Rotation System 
+//          4       : Error Interrupt Enable
+//          5       : Result Interrupt Enable
+//          6       : Overflow Stop Enable
+//          7       : Z Overflow stop Enable
+//          12, 8   : Number of Iteration
 
-    // Flags    16      : Ready
-    //          17      : Input Error
-    //          18      : Overflow Error
-    //          19      : X Overflow 
-    //          20      : Y Overflow
-    //          21      : Z Overflow
-    //          26, 22  : Iterations Elapsed
-    //          31, 27  : Overflow Iteration
+// Flags    16      : Ready
+//          17      : Input Error
+//          18      : Overflow Error
+//          19      : X Overflow 
+//          20      : Y Overflow
+//          21      : Z Overflow
+//          26, 22  : Iterations Elapsed
+//          31, 27  : Overflow Iteration
 
-  
 module Controller #(
     parameter 	p_WIDTH = 32,
     parameter   p_HALFWORD = 16,
@@ -47,28 +46,6 @@ module Controller #(
     localparam p_ROTATION = 1'b1;
     localparam p_RIGHT_ANGLE = 32'h40000000;
     localparam p_LOW_ANGLE = 32'h80000000;
-
-    localparam p_CNTRL_START        = 0;
-    localparam p_CNTRL_STOP         = 1;
-    localparam p_CNTRL_ROT_MODE     = 2;
-    localparam p_CNTRL_ROT_SYS      = 3;
-    localparam p_CNTRL_ERR_INT_EN   = 4;
-    localparam p_CNTRL_RSLT_INT_EN  = 5;
-    localparam p_CNTRL_OV_ST_EN     = 6;
-    localparam p_CNTRL_Z_OV_ST_EN   = 7;
-    localparam p_CNTRL_ITER_L       = 8;
-    localparam p_CNTRL_ITER_H       = 12;
-    
-    localparam p_FLAG_READY         = 16;
-    localparam p_FLAG_INP_ERR       = 17;
-    localparam p_FLAG_OV_ERR        = 18;
-    localparam p_FLAG_X_OV_ERR      = 19;
-    localparam p_FLAG_Y_OV_ERR      = 20;
-    localparam p_FLAG_Z_OV_ERR      = 21;
-    localparam p_FLAG_ELAPS_ITER_L  = 22;
-    localparam p_FLAG_ELAPS_ITER_H  = 26;
-    localparam p_FLAG_OV_ITER_L     = 27;
-    localparam p_FLAG_OV_ITER_H     = 31;
 
     reg [1:0] controllerState = p_IDLE;
     reg [1:0] nextState;
@@ -202,7 +179,7 @@ module Controller #(
 
                     if (controlRegister[p_CNTRL_ROT_SYS]) begin
                         if (controlRegister[p_CNTRL_ROT_MODE]) begin
-                            if (zValue > p_RIGHT_ANGLE) begin
+                            if (zValue[p_WIDTH-1] ? zValue < -p_RIGHT_ANGLE: zValue > p_RIGHT_ANGLE) begin
                                 nextZ = rotZ;
                                 nextX = negX;
                                 nextY = negY;
