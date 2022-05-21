@@ -1,8 +1,8 @@
 `ifndef CORE_DRIVER_SVH
 `define CORE_DRIVER_SVH
 
-`include "types.svh"
-`include "cordic_if.svh"
+`include "Types.svh"
+`include "CordicInterface.svh"
 
 class CoreDriver #(parameter width =  32, parameter int_width = 0);
   typedef Number #(width, int_width)  NumType;		// qn.m fixed point notation, n is integer width and m = width - int_width - 1

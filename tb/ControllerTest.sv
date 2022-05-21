@@ -1,19 +1,20 @@
 `ifndef CONTROLLER_TEST_SV
 `define CONTROLLER_TEST_SV
 
-`include "types.svh"
+`include "Types.svh"
 
-`include "cordic_if.svh"
+`include "CordicInterface.svh"
 `include "BusInterface.svh"
 `include "LutInterface.svh"
 
-`include "core_monitor.svh"
-`include "core_driver.svh"
-`include "core_sequencer.svh"
+`include "CoreMonitor.svh"
+`include "CoreDriver.svh"
+`include "CoreSequencer.svh"
+`include "BusMonitor.svh"
 
 //`include "cordic.sv"
-`include "controller.sv"
-`include "lut.sv"
+`include "Controller.sv"
+`include "Lut.sv"
 
 // Main testbench
 module testbench;
@@ -65,7 +66,8 @@ module testbench;
   BusInterface #(32) busIntf();
   LutInterface #(32) lutIntf();
   
-  CoreMonitor   #(32, p_INT_BITS) monitor 	  = new(cordicIntf.controller);  
+  // CoreMonitor   #(32, p_INT_BITS) monitor 	  = new(cordicIntf.controller);  
+  BusMonitor #(32, p_INT_BITS) monitor = new(busIntf);
   // CoreSequencer #(32, p_INT_BITS) sequencer	  = new(cordicIntf.controller);
   
   // Initializing the CORDIC core
@@ -306,6 +308,8 @@ module testbench;
 
       // Perform CORDIC iterations
       while(~busIntf.controlRegisterOutput[p_FLAG_READY]) begin
+        monitor.sample();
+        $display("%10f, %10f, %10f", monitor.xOut.realVal, monitor.yOut.realVal, monitor.zOut.degVal);        
         busIntf.clk = 1;
         #1;
         busIntf.clk = 0;

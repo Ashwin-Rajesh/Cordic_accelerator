@@ -1,11 +1,11 @@
 `ifndef CORE_TEST_SV
 `define CORE_TEST_SV
 
-`include "types.svh"
-`include "cordic_if.svh"
-`include "core_monitor.svh"
-`include "core_driver.svh"
-`include "core_sequencer.svh"
+`include "Types.svh"
+`include "CordicInterface.svh"
+`include "CoreMonitor.svh"
+`include "CoreDriver.svh"
+`include "CoreSequencer.svh"
 
 // Main testbench
 module testbench;
@@ -15,12 +15,12 @@ module testbench;
 
   localparam int p_CORDIC_NUM_ITER = 30;	// Number of CORDIC iterations
   
-  localparam bit p_CORDIC_SYSTEM = 1;	    // 1 : Circular,   	0 : Hyperbolic
-  localparam bit p_CORDIC_MODE = 0;				// 1 : Rotation, 	0 : Vectoring
+  localparam bit p_CORDIC_SYSTEM = 0;	    // 1 : Circular,   	0 : Hyperbolic
+  localparam bit p_CORDIC_MODE = 1;				// 1 : Rotation, 	0 : Vectoring
   
   localparam p_INT_BITS = p_CORDIC_SYSTEM ? 0 : 3; // Number of bits for integer part
 
-  localparam bit p_LIMIT_INPUTS = 1;      // Should inputs be valid?
+  localparam bit p_LIMIT_INPUTS = 0;      // Should inputs be valid?
 
   localparam bit p_LOG_TESTS = 0;         // Should we log info about each test?
   localparam bit p_LOG_ITER  = 0;         // Should we log info about each CORDIC iteration?

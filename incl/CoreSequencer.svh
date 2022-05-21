@@ -1,10 +1,10 @@
 `ifndef CORE_SEQUENCER_SVH
 `define CORE_SEQUENCER_SVH
 
-`include "types.svh"
-`include "cordic_if.svh"
-`include "core_driver.svh"
-`include "core_monitor.svh"
+`include "Types.svh"
+`include "CordicInterface.svh"
+`include "CoreDriver.svh"
+`include "CoreMonitor.svh"
 
 class CoreSequencer #(parameter width =  32, parameter int_width = 0);  
   typedef Number #(width, int_width)  NumType;      // qn.m fixed point notation, n is integer width and m = width - int_width - 1
@@ -62,8 +62,8 @@ class CoreSequencer #(parameter width =  32, parameter int_width = 0);
     4.2688682312579694e-07,
     2.1344341156289847e-07,
     1.0672170578144923e-07,
-    5.336085289072462e-08,    // Zero in binary (30)
-    2.668042644536231e-08,
+    5.336085289072462e-08,
+    2.668042644536231e-08,		// Zero in binary
     1.3340213222681154e-08,
     6.670106611340577e-09,
     3.3350533056702886e-09,
@@ -117,7 +117,7 @@ class CoreSequencer #(parameter width =  32, parameter int_width = 0);
     1.862645149230957e-09,
     9.313225746154785e-10,
     4.656612873077393e-10,
-    2.3283064365386963e-10,   // Zero in binary (32)
+    2.3283064365386963e-10,
     1.1641532182693481e-10,
     5.820766091346741e-11,
     2.9103830456733704e-11,
