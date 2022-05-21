@@ -2,6 +2,28 @@
 
 `define BUSINTERFACE_SVH
 
+localparam p_CNTRL_START        = 0;
+localparam p_CNTRL_STOP         = 1;
+localparam p_CNTRL_ROT_MODE     = 2;
+localparam p_CNTRL_ROT_SYS      = 3;
+localparam p_CNTRL_ERR_INT_EN   = 4;
+localparam p_CNTRL_RSLT_INT_EN  = 5;
+localparam p_CNTRL_OV_ST_EN     = 6;
+localparam p_CNTRL_Z_OV_ST_EN   = 7;
+localparam p_CNTRL_ITER_L       = 8;
+localparam p_CNTRL_ITER_H       = 12;
+
+localparam p_FLAG_READY         = 16;
+localparam p_FLAG_INP_ERR       = 17;
+localparam p_FLAG_OV_ERR        = 18;
+localparam p_FLAG_X_OV_ERR      = 19;
+localparam p_FLAG_Y_OV_ERR      = 20;
+localparam p_FLAG_Z_OV_ERR      = 21;
+localparam p_FLAG_ELAPS_ITER_L  = 22;
+localparam p_FLAG_ELAPS_ITER_H  = 26;
+localparam p_FLAG_OV_ITER_L     = 27;
+localparam p_FLAG_OV_ITER_H     = 31;
+
 interface BusInterface #(
   parameter 	p_WIDTH = 32,
   localparam 	p_LOG2_WIDTH = $clog2(p_WIDTH)
