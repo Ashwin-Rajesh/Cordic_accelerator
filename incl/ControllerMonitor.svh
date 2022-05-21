@@ -17,6 +17,26 @@ class ControllerMonitor #(parameter width =  32, parameter int_width = 0);
   NumType  yInp;        // y input value
   AngType  zInp;        // angle input value
   
+  bit start;
+  bit stop;
+  bit rotationMode;
+  bit rotationSystem;
+  bit errorIntEn;
+  bit resultIntEn;
+  bit overflowStopEn;
+  bit zOverflowStopEn;
+  int iterCount;
+
+  bit ready;
+  bit inpError;
+  bit overflowError;
+  bit xOverflow;
+  bit yOverflow;
+  bit zOverflow;
+
+  int iterElapsed;
+  int overflowIter;
+
   virtual BusInterface.bus intf;
   
   function new(virtual BusInterface.bus inpIntf);
@@ -40,6 +60,27 @@ class ControllerMonitor #(parameter width =  32, parameter int_width = 0);
     xInp.setBin(intf.xInput);
     yInp.setBin(intf.yInput);
     zInp.setBin(intf.zInput);
+
+    start           = intf.controlRegisterInput[p_CNTRL_START];
+    stop            = intf.controlRegisterInput[p_CNTRL_STOP];
+    rotationMode    = intf.controlRegisterInput[p_CNTRL_ROT_MODE];
+    rotationSystem  = intf.controlRegisterInput[p_CNTRL_ROT_SYS];
+    errorIntEn      = intf.controlRegisterInput[p_CNTRL_ERR_INT_EN];
+    resultIntEn     = intf.controlRegisterInput[p_CNTRL_RSLT_INT_EN];
+    overflowStopEn  = intf.controlRegisterInput[p_CNTRL_OV_ST_EN];
+    zOverflowStopEn = intf.controlRegisterInput[p_CNTRL_Z_OV_ST_EN];
+    
+    iterCount       = intf.controlRegisterInput[p_CNTRL_ITER_H:p_CNTRL_ITER_L];
+
+    ready           = intf.controlRegisterOutput[p_FLAG_READY];
+    inpError        = intf.controlRegisterOutput[p_FLAG_INP_ERR];
+    overflowError   = intf.controlRegisterOutput[p_FLAG_OV_ERR];
+    xOverflow       = intf.controlRegisterOutput[p_FLAG_X_OV_ERR];
+    yOverflow       = intf.controlRegisterOutput[p_FLAG_Y_OV_ERR];
+    zOverflow       = intf.controlRegisterOutput[p_FLAG_Z_OV_ERR];
+    
+    iterElapsed     = intf.controlRegisterOutput[p_FLAG_ELAPS_ITER_H:p_FLAG_ELAPS_ITER_L];
+    overflowIter    = intf.controlRegisterOutput[p_FLAG_OV_ITER_H:p_FLAG_OV_ITER_L];
   endfunction
 
   function real xInpReal();
