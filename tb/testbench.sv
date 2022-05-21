@@ -1,3 +1,2 @@
-//`include "core_test.sv"
-`include "controllerTest.sv"
-//`include "types_test.sv"
+//`include "CoreTest.sv"
+`include "ControllerTest.sv"
