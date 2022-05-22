@@ -5,6 +5,7 @@ class log_file:
     
     def __init__(self, inp):
         self.filename = inp
+        self.parse()
     
     def parse(self):
         with open(self.filename, "r") as f:
@@ -85,6 +86,11 @@ class log_file:
             self.exp_hist = []
             self.err_hist = []
             self.sta_hist = []
+            self.xov_hist = []
+            self.yov_hist = []
+            self.zov_hist = []
+            self.ovi_hist = []
+            self.sta_hist = []
 
             for i in range(self.num_tests):
                 inp = f.readline().strip().split(':')
@@ -103,7 +109,12 @@ class log_file:
                 self.inp_hist.append(tuple(map(float, dat[0].split(','))))
                 self.exp_hist.append(tuple(map(float, dat[1].split(','))))
                 self.err_hist.append(tuple(map(float, dat[2].split(','))))
-                self.sta_hist.append(True if int(inp[2].split(',')[1]) == -1 else False)
+                self.xov_hist.append(True if inp[2].split(',')[0].strip()[0] == "1" else False)
+                self.yov_hist.append(True if inp[2].split(',')[0].strip()[1] == "1" else False)
+                self.zov_hist.append(True if inp[2].split(',')[0].strip()[2] == "1" else False)
+                self.ovi_hist.append(int(inp[2].split(',')[1]))
+                # self.sta_hist.append(True if int(inp[2].split(',')[1]) == -1 else False)
+                self.sta_hist.append(inp[2].split(',')[0].strip()[0:2] == "00" if self.circ else int(inp[2].split(',')[1]) == -1)
 
             self.inp_good, self.inp_fail = self.separate(self.inp_hist)
             self.err_good, self.err_fail = self.separate(self.err_hist)
@@ -174,10 +185,12 @@ class log_file:
 
         # Scatter plot for expected x and expected angle
         plt.subplot(133)
-        plt.scatter(self.exp_good[:, 2], self.exp_good[:, 0], s=5,  marker="o", c="green", label="Success")
-        if(len(self.exp_fail) != 0): plt.scatter(self.exp_fail[:, 2], self.exp_fail[:, 0], s=10, marker="x", c="red",   label="Overflow")
+        plt.scatter(np.arctan2(self.inp_good[:,1], self.inp_good[:, 0]), self.exp_good[:, 0], s=5,  marker="o", c="green", label="Success")
+        if(len(self.exp_fail) != 0): plt.scatter(np.arctan2(self.inp_fail[:,1], self.inp_fail[:, 0]), self.exp_fail[:, 0], s=5,  marker="o", c="red", label="Overflow")
+        # plt.scatter(self.exp_good[:, 2], self.exp_good[:, 0], s=5,  marker="o", c="green", label="Success")
+        # if(len(self.exp_fail) != 0): plt.scatter(self.exp_fail[:, 2], self.exp_fail[:, 0], s=10, marker="x", c="red",   label="Overflow")
 
-        plt.xlabel("Expected angle output")
+        plt.xlabel("Input coordinate angle")
         plt.ylabel("Expected x coordinate output")
         plt.title("Input rotation angle and input coordinate magnitude")
         plt.legend()
@@ -185,8 +198,8 @@ class log_file:
         plt.show()
 
     def vis_rot_error(self):        
-        x_err_dB   = 20 * np.log10(np.abs(self.err_good[:, 0] / self.exp_good[:, 0]))
-        y_err_dB   = 20 * np.log10(np.abs(self.err_good[:, 1] / self.exp_good[:, 1]))
+        x_err_dB   = 20 * np.log10(np.abs(self.err_good[:, 0]))
+        y_err_dB   = 20 * np.log10(np.abs(self.err_good[:, 1]))
         ang_err_dB = 20 * np.log10(np.maximum(1e-10, np.abs(self.err_good[:, 2])) / 180)
         mag_err_dB = 20 * np.log10(np.linalg.norm(self.err_good[:, 0:2], axis=1))
 
@@ -202,12 +215,12 @@ class log_file:
             
         # Input angle v/s angle residual
         plt.subplot(132)
-        plt.scatter(x_err_dB, y_err_dB, s=5)
-        plt.axis('square')
-        plt.xlabel("x error (dB)")
-        plt.ylabel("y error (dB)")
-        plt.title("X error v/s y error")
-
+        plt.scatter(self.inp_good[:, 2], mag_err_dB, s=5)
+        plt.ylim((-250, 0))
+        plt.xlabel("Input angle (degrees)")
+        plt.ylabel("Magnitude error (dB)")
+        plt.title("Input angle v/s angle residual")
+            
         plt.subplot(133)
         plt.hist(mag_err_dB, density = True, bins=30, histtype='step', label="Magnitude error")
         plt.hist(ang_err_dB, density = True, bins=30, histtype='step', label="Angle error")
@@ -221,7 +234,7 @@ class log_file:
 
     def vis_vect_error(self):
         x_err_dB   = 20 * np.log10(np.abs(self.err_good[:, 0]))
-        y_err_dB   = 20 * np.log10(np.abs(self.err_good[:, 1]))
+        y_err_dB   = 20 * np.log10(np.maximum(1e-15, np.abs(self.err_good[:, 1])))
         ang_err_dB = 20 * np.log10(np.maximum(1e-10, np.abs(self.err_good[:, 2])) / 180)
         mag_err_dB = 20 * np.log10(np.linalg.norm(self.err_good[:, 0:2], axis=1))
 
@@ -235,18 +248,19 @@ class log_file:
         plt.ylabel("Angle error (dB)")
         plt.title("Expected angle v/s angle error")
             
-        # Input angle v/s angle residual
+        # Expected angle v/s magnitude error
         plt.subplot(132)
-        plt.scatter(x_err_dB, ang_err_dB, s=5)
-        plt.axis('square')
-        plt.xlabel("x error (dB)")
-        plt.ylabel("angle error (dB)")
-        plt.title("X residual v/s angle error")
+        plt.scatter(self.exp_good[:, 2], y_err_dB, s=5)
+        plt.ylim((-250, 0))
+        plt.xlabel("Expected angle (degrees)")
+        plt.ylabel("y error (dB)")
+        plt.title("Expected angle v/s angle error")
 
         # Histogram of errors
         plt.subplot(133)
         plt.hist(x_err_dB, density = True, bins=30, histtype='step', label="X error")
         plt.hist(ang_err_dB, density = True, bins=30, histtype='step', label="Angle error")
+        plt.hist(y_err_dB, density = True, bins=30, histtype='step', label="y residual")
         plt.xlim((-250, 0))
         plt.xlabel("Error (dB)")
         plt.ylabel("Density")
@@ -279,33 +293,27 @@ class log_file:
 # Pass filenames to directly visualize them using these functions
  
 def vis_rot_inputs_file(filename):
-    f1 = log_file(filename)
-    f1.parse()
-    f1.vis_rot_inputs()
+    l = log_file(filename)
+    l.vis_rot_inputs()
 
 def vis_rot_error_file(filename):
-    f1 = log_file(filename)
-    f1.parse()
-    f1.vis_rot_error()
+    l = log_file(filename)
+    l.vis_rot_error()
 
 def vis_rotation_file(filename):
-    f1 = log_file(filename)
-    f1.parse()
-    f1.vis_rot_inputs()
-    f1.vis_rot_error()
+    l = log_file(filename)
+    l.vis_rot_inputs()
+    l.vis_rot_error()
 
 def vis_vect_inputs_file(filename):
-    f1 = log_file(filename)
-    f1.parse()
-    f1.vis_vect_inputs()
+    l = log_file(filename)
+    l.vis_vect_inputs()
 
 def vis_vect_error_file(filename):
-    f1 = log_file(filename)
-    f1.parse()
-    f1.vis_vect_error()
+    l = log_file(filename)
+    l.vis_vect_error()
 
 def vis_vectoring_file(filename):
-    f1 = log_file(filename)
-    f1.parse()
-    f1.vis_vect_inputs()
-    f1.vis_vect_error()
+    l = log_file(filename)
+    l.vis_vect_inputs()
+    l.vis_vect_error()
