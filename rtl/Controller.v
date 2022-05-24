@@ -114,9 +114,26 @@ module Controller #(
     if (busPort.rst) begin
 
       nextControlRegister = {
-        5'b0, 5'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b1, 3'b0, 5'd31, 1'b1, 1'b1, 1'b1, 1'b1, 1'b0, 1'b0, 1'b0, 1'b0
-      };
-
+              5'b0,   // Overflow iteration
+              5'b0,   // Iteration elapsed
+              1'b0,   // Z overflow
+              1'b0,   // Y overflow
+              1'b0,   // X overflow
+              1'b0,   // Overflow Error
+              1'b0,   // Input Error
+              1'b1,   // Ready
+              3'b0,   // Placeholder
+              5'd31,  // Number of iterations
+              1'b1,   // z overflow stop enable
+              1'b1,   // Overflow stop enable
+              1'b1,   // Result interrupt enable
+              1'b1,   // Error interrupt enable
+              1'b0,   // Rotation system (1 for circ, 0 for hyp)
+              1'b0,   // Rotation mode (1 for rot, 0 for vect)
+              1'b0,   // Stop
+              1'b0    // Start
+            };
+      
       nextX = 32'h0;
       nextY = 32'h0;
       nextZ = 32'h0;
@@ -146,8 +163,8 @@ module Controller #(
               1'b0,                                                           // X overflow
               1'b0,                                                           // Overflow Error
               1'b0,                                                           // Input Error
-              1'b0,                                                           // Error
-              3'b0,                                                           // Ready
+              1'b0,                                                           // Ready
+              3'b0,                                                           // Placeholder
               busPort.controlRegisterInput[p_CNTRL_ITER_H : p_CNTRL_ITER_L],  // Number of iterations
               busPort.controlRegisterInput[p_CNTRL_Z_OV_ST_EN],               // z overflow stop enable
               busPort.controlRegisterInput[p_CNTRL_OV_ST_EN],                 // Overflow stop enable
