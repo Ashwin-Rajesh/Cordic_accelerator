@@ -12,6 +12,7 @@ localparam p_CNTRL_OV_ST_EN     = 6;
 localparam p_CNTRL_Z_OV_ST_EN   = 7;
 localparam p_CNTRL_ITER_L       = 8;
 localparam p_CNTRL_ITER_H       = 12;
+localparam p_CNTRL_Z_OV_EN      = 13;
 
 localparam p_FLAG_READY         = 16;
 localparam p_FLAG_INP_ERR       = 17;
@@ -56,6 +57,7 @@ interface BusInterface #(
   //          6       : Overflow Stop Enable
   //          7       : Z Overflow stop Enable
   //          8, 12   : Number of Iteration
+  //          13      : Z Overflow Report Enable.
 
   // Flags    16      : Ready
   //          17      : Error

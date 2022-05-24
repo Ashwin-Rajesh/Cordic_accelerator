@@ -14,6 +14,7 @@
 //          6       : Overflow Stop Enable
 //          7       : Z Overflow stop Enable
 //          12, 8   : Number of Iteration
+//          13      : Z Overflow Report Enable.
 
 // Flags    16      : Ready
 //          17      : Input Error
@@ -52,7 +53,7 @@ module Controller #(
   reg [31:0] nextControlRegister;
 
   reg [31 : 0] controlRegister = {
-    5'b0, 5'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b1, 3'b0, 5'd31, 1'b1, 1'b1, 1'b1, 1'b1, 1'b0, 1'b0, 1'b0, 1'b0
+    5'b0, 5'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b0, 1'b1, 2'b0, 1'b1, 5'd31, 1'b1, 1'b1, 1'b1, 1'b1, 1'b0, 1'b0, 1'b0, 1'b0
   };
 
   reg [p_WIDTH - 1 : 0] xValue = 32'h0;
@@ -123,6 +124,7 @@ module Controller #(
               1'b0,   // Input Error
               1'b1,   // Ready
               3'b0,   // Placeholder
+              1'b1,   // Z overflow Report enable
               5'd31,  // Number of iterations
               1'b1,   // z overflow stop enable
               1'b1,   // Overflow stop enable
@@ -164,7 +166,8 @@ module Controller #(
               1'b0,                                                           // Overflow Error
               1'b0,                                                           // Input Error
               1'b0,                                                           // Ready
-              3'b0,                                                           // Placeholder
+              2'b0,                                                           // Placeholder
+              busPort.controlRegisterInput[p_CNTRL_Z_OV_EN],                  // Z Overflow Report Enable
               busPort.controlRegisterInput[p_CNTRL_ITER_H : p_CNTRL_ITER_L],  // Number of iterations
               busPort.controlRegisterInput[p_CNTRL_Z_OV_ST_EN],               // z overflow stop enable
               busPort.controlRegisterInput[p_CNTRL_OV_ST_EN],                 // Overflow stop enable
@@ -237,7 +240,9 @@ module Controller #(
           if(~controlRegister[p_FLAG_Y_OV_ERR]) nextControlRegister[p_FLAG_Y_OV_ERR] = cordicPort.yOverflow;
           if(~controlRegister[p_FLAG_Z_OV_ERR]) nextControlRegister[p_FLAG_Z_OV_ERR] = cordicPort.zOverflow;
           if(~controlRegister[p_FLAG_OV_ERR])   
-            nextControlRegister[p_FLAG_OV_ERR] = nextControlRegister[p_FLAG_X_OV_ERR] || nextControlRegister[p_FLAG_Y_OV_ERR] || nextControlRegister[p_FLAG_Z_OV_ERR];
+            nextControlRegister[p_FLAG_OV_ERR] = nextControlRegister[p_FLAG_X_OV_ERR] 
+                || nextControlRegister[p_FLAG_Y_OV_ERR] 
+                || (nextControlRegister[p_FLAG_Z_OV_ERR] & nextControlRegister[p_CNTRL_Z_OV_EN]);
 
           nextState = p_CORDIC;
 

@@ -37,6 +37,7 @@ module testbench;
   localparam bit p_CNTRL_ERR_INT = 1'b1;  // Error interrupt
   localparam bit p_CNTRL_OV_STOP = 1'b1;  // Overflow stop
   localparam bit p_CNTRL_Z_OV_STOP = 1'b0;// Z overflow stop
+  localparam bit p_CNTRL_Z_OV_REPORT_EN = 1'b0; // should report z overflow.
   
   typedef Number #(32, p_INT_BITS)  NumType;
   typedef Angle #(32) 	            AngType;
@@ -246,6 +247,7 @@ module testbench;
       busIntf.controlRegisterInput[p_CNTRL_ITER_H:p_CNTRL_ITER_L] = p_CORDIC_NUM_ITER;
       busIntf.controlRegisterInput[p_CNTRL_OV_ST_EN]              = p_CNTRL_OV_STOP;
       busIntf.controlRegisterInput[p_CNTRL_Z_OV_ST_EN]            = p_CNTRL_Z_OV_STOP;
+      busIntf.controlRegisterInput[p_CNTRL_Z_OV_EN]               = p_CNTRL_Z_OV_REPORT_EN;
       busIntf.controlRegisterInput[p_CNTRL_ERR_INT_EN]            = p_CNTRL_ERR_INT;
       busIntf.controlRegisterInput[p_CNTRL_RSLT_INT_EN]           = p_CNTRL_RSLT_INT;
 
