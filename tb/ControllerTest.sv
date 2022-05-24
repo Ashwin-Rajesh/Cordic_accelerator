@@ -21,8 +21,8 @@ module testbench;
 
   localparam int p_CORDIC_NUM_ITER = 30;	// Number of CORDIC iterations
   
-  localparam bit p_CORDIC_SYSTEM = 1;	    // 1 : Circular,   	0 : Hyperbolic
-  localparam bit p_CORDIC_MODE = 0;			// 1 : Rotation, 	0 : Vectoring
+  localparam bit p_CORDIC_SYSTEM = 0;	    // 1 : Circular,   	0 : Hyperbolic
+  localparam bit p_CORDIC_MODE = 1;			  // 1 : Rotation, 	0 : Vectoring
   
   localparam p_INT_BITS = p_CORDIC_SYSTEM ? 0 : 3; // Number of bits for integer part
   
@@ -157,8 +157,8 @@ module testbench;
         end else begin
           if(p_CORDIC_MODE) begin
             // Hyperbolic rotation
-            xInitNum.setReal(p_HYP_FACTOR);
-            yInitNum.setReal(0);
+            xInitNum.setReal(0);
+            yInitNum.setReal(p_HYP_FACTOR);
             zInitAngle.setReal(0.5);      
           end else begin
             // Hyperbolic vectoring
@@ -275,10 +275,16 @@ module testbench;
       // Perform CORDIC iterations till ready bit is set
       while(1) begin
         // Stop on interrupt or, stop on ready if interrupt was disabled
-        if(busIntf.interrupt)
+        if(busIntf.interrupt) begin
+          if(p_LOG_ITER)
+            $display("Interrupt");
           break;
-        if(~p_CNTRL_RSLT_INT && busIntf.controlRegisterOutput[p_FLAG_READY])
+        end if(~p_CNTRL_RSLT_INT && busIntf.controlRegisterOutput[p_FLAG_READY]) begin
+          if(p_LOG_ITER)
+            $display("Ready bit set");
           break;
+        end
+
         busIntf.clk = 1;
         #1;
         busIntf.clk = 0;
@@ -322,10 +328,12 @@ module testbench;
         zInitHist.push_back(zInitAngle.degVal);
       else
         zInitHist.push_back(zInitAngle.getReal());
+
       // Save expected values      
       xExpHist.push_back(xExp);
       yExpHist.push_back(yExp);
       zExpHist.push_back(zExp);
+
       // Save output errors
       xErrorHist.push_back($abs(monitor.xOutReal - xExp));
       yErrorHist.push_back($abs(monitor.yOutReal - yExp));
@@ -333,8 +341,14 @@ module testbench;
         zErrorHist.push_back(degreeWrap($abs(monitor.zOutDeg - zExp)));
       else
         zErrorHist.push_back($abs(monitor.zOutReal - zExp));
+
       // Save overflow information
-      ovIterHist.push_back(monitor.overflowError? monitor.overflowIter : -1);
+      if(monitor.inpError)
+        ovIterHist.push_back(0);
+      else if(~monitor.overflowError)
+        ovIterHist.push_back(-1);
+      else
+        ovIterHist.push_back(monitor.overflowIter);
       xOvHist.push_back(monitor.xOverflow);
       yOvHist.push_back(monitor.yOverflow);
       zOvHist.push_back(monitor.zOverflow);
