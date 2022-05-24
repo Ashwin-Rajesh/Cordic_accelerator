@@ -1,6 +1,6 @@
-`include "cordic_if.svh"
+`include "CordicInterface.svh"
 
-module cordic #(
+module Cordic #(
   parameter 	p_WIDTH = 32
 ) (
   CordicInterface.core intf

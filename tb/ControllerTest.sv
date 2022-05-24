@@ -51,9 +51,9 @@ module testbench;
   ControllerMonitor #(32, p_INT_BITS) monitor = new(busIntf.bus);
   
   // The modules
-  cordic        #(.p_WIDTH(32)) compute_unit  (cordicIntf.core);
+  Cordic        #(.p_WIDTH(32)) compute_unit  (cordicIntf.core);
   Controller    dut     (busIntf.controller, cordicIntf.controller, lutIntf.controller);
-  lut           lut_inst (lutIntf.lut);
+  Lut           lut_inst (lutIntf.lut);
 
   // Initial values
   NumType xInitNum     = new(0);

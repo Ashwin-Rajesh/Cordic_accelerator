@@ -37,7 +37,7 @@ module testbench;
   CoreSequencer #(32, p_INT_BITS) sequencer	  = new(intf.controller);
     
   // Initializing the CORDIC core
-  cordic        #(.p_WIDTH(32)) dut           (intf.core);
+  Cordic        #(.p_WIDTH(32)) dut           (intf.core);
 
   // Initial values
   NumType xInitNum     = new(0);

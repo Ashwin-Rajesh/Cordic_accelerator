@@ -1,6 +1,6 @@
 `include "LutInterface.svh"
 
-module lut #(
+module Lut #(
   parameter 	p_WIDTH = 32,
   parameter   p_ANGLE_ADDR_WIDTH = 5
 ) (
