@@ -123,7 +123,7 @@ module Controller #(
               1'b0,   // Overflow Error
               1'b0,   // Input Error
               1'b1,   // Ready
-              3'b0,   // Placeholder
+              2'b0,   // Placeholder
               1'b1,   // Z overflow Report enable
               5'd31,  // Number of iterations
               1'b1,   // z overflow stop enable
