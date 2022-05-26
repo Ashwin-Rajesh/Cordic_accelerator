@@ -229,7 +229,7 @@ module Controller #(
 
           if(~controlRegister[p_FLAG_OV_ERR]) begin
             nextControlRegister[p_FLAG_OV_ITER_H:p_FLAG_OV_ITER_L]
-                = controlRegister[p_FLAG_OV_ITER_H:p_FLAG_OV_ITER_L] + 1'b1;
+                = nextControlRegister[p_FLAG_ELAPS_ITER_H:p_FLAG_ELAPS_ITER_L];
           end
           
           nextX = cordicPort.xResult;
