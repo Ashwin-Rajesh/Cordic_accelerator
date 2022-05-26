@@ -249,36 +249,30 @@ module BusManager #
           // Slave register 2
           slv_reg2[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
           end  
-        3'h3:
-          if(intf.controlRegisterWriteEnable)
-            slv_reg3 <= intf.xResult;
-        3'h4:
-          if(intf.controlRegisterWriteEnable)
-            slv_reg4 <= intf.xResult;
-        3'h5:
-          if(intf.controlRegisterWriteEnable)
-            slv_reg5 <= intf.xResult;
-        3'h6:
-          if(intf.controlRegisterWriteEnable)
-            slv_reg6 <= intf.controlRegisterOutput;
-          else
-            for ( byte_index = 0; byte_index <= 2; byte_index = byte_index+1 )
-              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-                // Respective byte enables are asserted as per write strobes 
-                // Slave register 6
-                slv_reg6[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
-              end  
         default : begin
               slv_reg0 <= slv_reg0;
               slv_reg1 <= slv_reg1;
               slv_reg2 <= slv_reg2;
-              slv_reg3 <= slv_reg3;
-              slv_reg4 <= slv_reg4;
-              slv_reg5 <= slv_reg5;
-              slv_reg6 <= slv_reg6;
             end
       endcase
       end
+
+      // Write from controller to result registers
+      slv_reg3 <= intf.xResult;
+      slv_reg4 <= intf.xResult;
+      slv_reg5 <= intf.xResult;
+
+      // Write to control register (from controller or bus input)
+      if(intf.controlRegisterWriteEnable)
+        slv_reg6 <= intf.controlRegisterOutput;
+      else
+        if(slv_reg_wren && axi_awaddr[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB] == 3'h6)
+          for ( byte_index = 0; byte_index <= 2; byte_index = byte_index+1 )
+            if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+              // Respective byte enables are asserted as per write strobes 
+              // Slave register 6
+              slv_reg6[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+            end  
     end
   end    
 
