@@ -1,61 +1,94 @@
 @startuml
+state reset : clr control[32], xResult, yResult, zResult, interrupt \n set control.ready, .zOvReportEn, .iterationCount, .zOvStEn, .ovStEn, .rsltIntEn, .errIntEn, controlWrEn \n 
+
 state idle {
-    state load : Load X, Y, Z, Control
+    state idleLoop : clr controlWrEn, interrupt
+
+    state start : set x, y, z Result as x, y, z inputs \n set control as controlInput\n clr control.flags[16], control.stop, control.start\n set controlWrEn
+
+    idleLoop --> idleLoop : control.start
+    idleLoop --> start : not control.start
+    
+    state idleReset <<join>>
+
+    idleLoop --> idleReset : rst
+    start --> idleReset : rst
+
+    idleReset --> reset
 }
+
 
 state preCordic {
-    state rotationalSystem : is circular system or hyperbolic
-    state circular : |Z| < 90 deg
-    state hyperbolic : |Z| < 60 deg
 
-    state hyperbolicMode : is mode rotation or vectoring
-    state circularMode : is mode rotation or vectoring
-    rotationalSystem -down-> circularMode : ::rotationalSystem is high
-    circularMode -right-> circular : ::mode is high
-    rotationalSystem -up-> hyperbolicMode : ::rotationalSystem is low
-    hyperbolicMode -right-> hyperbolic : ::mode is high
-    hyperbolicMode -up-> hyperbolicVector : ::mode is low
-    state hyperbolicVector : X > 0 && |Y| < X  
-    state preRotation : Y = - Y, X = -X, Z = Z - 180 
-    circular --> preRotation : fail
-    state circularVector : X > 0
-    circularMode -down-> circularVector : ::mode is low
-    state circularPreVector : Z = Z - 180, X = -X, Y = -Y
-    circularVector --> circularPreVector : fail
+    state setup : clr controlWrEn
+    state toCordic <<join>>
+    state preCordicRst <<join>>
+
+    
+    state hyperbolicPreSet : set control.iterationElapsed as 1
+    state hyperbolicInputError : set control.inputError
+
+    hyperbolicPreSet --> hyperbolicInputError : X < 0 OR X < |Y|
+    hyperbolicPreSet --> toCordic : No error
+
+    setup --> hyperbolicPreSet : not control.rotationSystem
+
+    state circularPreSet : set control.iterationElapsed as 0
+    state circularError : set X as -X , Y as -Y, Z as Z - 180
+    
+    setup --> circularPreSet : control.rotationSystem
+
+    circularPreSet --> circularError : (control.rotationMode and |Z| > 90) OR (not control.rotationMode and X < 0)
+    circularPreSet --> toCordic : No Error
+    circularError --> toCordic
+
+    toCordic --> preCordicRst : rst
+    hyperbolicInputError --> preCordicRst : rst
+
+    preCordicRst --> reset
 }
-
-hyperbolicVector -left-> postCordic : fail condition
 
 state Cordic {
-    state initialize: flag::iter = 0; 
-    state cordicCompute : compute cordic process
-    state overflow : rais overflow flag and stop
-    state stop : stop due to control stop 
-    state update : flag::iter += 1
+    
+    state iterator : inc control.iterationElapsed
+    state incOverflow : inc control.ovIteration
 
-    initialize -right-> cordicCompute : angle[flag::iter], dir = Z > 0 or Y > 0 for ::mode high or low
-    cordicCompute -up-> stop : ::stop
-    cordicCompute -right-> overflow : overflow in operation
-    cordicCompute -down-> update : no error
-    update -down-> initialize : flag::iter != ::iter
-    update -right-> postCordic : flag::iter == ::iter
-    stop -right-> postCordic
-    overflow -right-> postCordic
+    iterator --> incOverflow : not control.ovError
+
+    state cordicComputation : set cordic Inputs and Outputs ( X Y Z, Overflow)\n set control.ovError as X_ov or Y_ov or (Z_ov and Z_ov_report_en)
+
+    iterator --> cordicComputation : control.ovError
+    incOverflow --> cordicComputation
+
+    state cordicError <<join>>
+
+    cordicComputation --> cordicError : control.stop or control.ov_st_en and ( X_ov or Y_ov or (Z_ov and Z_ov_st_en)) or control.iterationElapsed == control.iterationCount
+
+    cordicComputation --> iterator : else
+
+    cordicComputation --> reset : rst
 }
 
-    circularPreVector --> initialize
-    preRotation --> initialize
-    hyperbolic --> initialize
-    hyperbolicVector -up-> initialize
-    circular --> initialize
-    circularVector --> initialize
 state postCordic {
+    state cleanup : set controlWrEn, control.ready
+    state interrupt : set interrupt
+
+    state toIdle <<join>>
+
+    cleanup --> interrupt : ((overflow & ov_st_en) or inp_err) and err_interrupt_en or rslt_interrupt_en
+    cleanup --> toIdle : else
+
+    interrupt --> toIdle
+
+    toIdle --> reset : rst
 
 }
-hyperbolic --> postCordic : failCondition
-idle -left-> rotationalSystem : rise ::start 
-idle -right-> idle : else
-Cordic -left-> postCordic
-postCordic -up-> idle
 
+
+reset --> idleLoop
+start --> setup
+toCordic --> iterator
+cordicError --> cleanup
+hyperbolicInputError --> cleanup
+toIdle --> idleLoop
 @enduml
