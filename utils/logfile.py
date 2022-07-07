@@ -5,33 +5,45 @@ class log_file:
     
     def __init__(self, inp):
         self.filename = inp
-        self.parse()
+        ret, msg = self.parse()
+
+        if(not ret):
+            print("Error : %s"%(msg))
     
     def parse(self):
         with open(self.filename, "r") as f:
-            # Line 1 parsing
-            inp = f.readline().split(' ')
-            if(len(inp) != 3):
-                return False, "Line 1 must be in format <rotationSystem> <controlMode> test"
+            inp = f.readline().strip()
+            while(inp != ''):
+                # Line 1 parsing
+                if(inp == "Circular rotation test"):
+                    self.hyp  = False
+                    self.circ = True
+                    self.rot  = True
+                    self.vect = False
+                    break
+                elif(inp == "Circular vectoring test"):
+                    self.hyp  = False
+                    self.circ = True
+                    self.rot  = False
+                    self.vect = True
+                    break
+                elif(inp == "Hyperbolic rotation test"):
+                    self.hyp  = True
+                    self.circ = False
+                    self.rot  = True
+                    self.vect = False
+                    break
+                elif(inp == "Hyperbolic vectoring test"):
+                    self.hyp  = True
+                    self.circ = False
+                    self.rot  = False
+                    self.vect = True
+                    break
+                else:
+                    inp = f.readline().strip()
+            if(inp == ''):
+                return False, "First line of format '<rotationSystem> <controlMode> test' not found"
             
-            if(inp[0] == "Hyperbolic"):
-                self.hyp  = True
-                self.circ = False
-            elif(inp[0] == "Circular"):
-                self.hyp  = False
-                self.circ  = True
-            else:
-                return False, "Line 1 : rotationSystem '%s' not recognized"%(inp[0])
-            
-            if(inp[1] == "rotation"):
-                self.rot  = True
-                self.vect  = False
-            elif(inp[1] == "vectoring"):
-                self.rot  = False
-                self.vect  = True
-            else:
-                return False, "Line 1 : controlMode '%s' not recognized"%(inp[1])
-
             # Skip Line 2
             f.readline()
 
@@ -97,13 +109,13 @@ class log_file:
                 if(inp[0][0] == '-'):
                     break
 
-                if(len(inp) != 3):
-                    print("ERR")
+                if(len(inp) < 3):
+                    print("ERR1")
 
                 dat = inp[1].split('|')
 
                 if(len(dat) != 3):
-                    print("ERR")
+                    print("ERR2")
 
                 self.idx_hist.append(int(inp[0]))
                 self.inp_hist.append(tuple(map(float, dat[0].split(','))))
@@ -119,6 +131,8 @@ class log_file:
             self.inp_good, self.inp_fail = self.separate(self.inp_hist)
             self.err_good, self.err_fail = self.separate(self.err_hist)
             self.exp_good, self.exp_fail = self.separate(self.exp_hist)
+
+        return True, "Parsed file"
         
     def separate(self, inp_list):
         good_list   = np.asarray([inp_list[i] for i in range(len(inp_list)) if self.sta_hist[i]])
