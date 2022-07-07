@@ -7,6 +7,23 @@ Department of Electronics and Communication Engineering
 
 Government Engineering College Thrissur
 
+---
+
+## Index
+
+- ```docs``` : Documentation
+  - ```data``` : Logfiles generated from tests
+  - ```diagrams``` : Flowcharts and diagrams
+  - ```plots``` : Plots generated from jupyter notebooks
+  - [```cordic_circular.ipynb```](docs/cordic_circular.ipynb) : Jupyter notebook characterizing circular mode performance
+  - [```cordic_hyperbolic.ipynb```](docs/cordic_hyperbolic.ipynb) : Jupyter notebook characterizing hyperbolic mode performance
+  - [```cordic.md```](docs/cordic.md) : Compute unit documentation
+  - [```cordic_test.md```](docs/cordic_test.md) : Testbench documentation
+- ```incl``` : ```.svh``` files included in RTL or TB code
+- ```rtl``` : Synthesizable components written in system verilog
+- ```tb``` : Testbenches written in system verilog
+- ```test``` : Test code to be run on the processor
+- ```utils``` : Python scripts for generating lookup tables, helper functions for jupyter notebook, etc
 
 
 ---
