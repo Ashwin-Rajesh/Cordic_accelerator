@@ -259,8 +259,8 @@ module BusManager #
 
       // Write from controller to result registers
       slv_reg3 <= intf.xResult;
-      slv_reg4 <= intf.xResult;
-      slv_reg5 <= intf.xResult;
+      slv_reg4 <= intf.yResult;
+      slv_reg5 <= intf.zResult;
 
       // Write to control register (from controller or bus input)
       if(intf.controlRegisterWriteEnable)

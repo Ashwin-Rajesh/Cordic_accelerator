@@ -76,7 +76,7 @@ module testbench;
   bit yOverflow = 0;
   bit zOverflow = 0;
   int overflowIter = 0;
-
+  
   int iTest, iIter;
 
   localparam p_WIDTH = 32;
@@ -210,24 +210,24 @@ module testbench;
             continue;
           end
           
-          if($abs(yInitNum.realVal) > $abs(xInitNum.realVal) && p_LIMIT_INPUTS) begin // y < x for hyperbolic vectoring
+          if(absolute(yInitNum.realVal) > absolute(xInitNum.realVal) && p_LIMIT_INPUTS) begin // y < x for hyperbolic vectoring
             if(p_LOG_TESTS) $display("abs(y) < abs(x) for hyperbolic vectoring");
             iTest--;
             continue;
           end
 
           // Get expected values
-          if($abs(yInitNum.realVal) > $abs(xInitNum.realVal))
+          if(absolute(yInitNum.realVal) > absolute(xInitNum.realVal))
             xExp = 0;
           else
             xExp = $sqrt(xInitNum.realVal ** 2 - yInitNum.realVal ** 2) / p_HYP_FACTOR;
           yExp = 0;
-          if($abs(yInitNum.realVal) > $abs(xInitNum.realVal))
+          if(absolute(yInitNum.realVal) > absolute(xInitNum.realVal))
           	zExp = 0;
           else
             zExp = zInitAngle.getReal() + ($atanh(yInitNum.realVal / xInitNum.realVal));
 
-          if($abs(zExp) > 1 && p_LIMIT_INPUTS) begin                                // Angle < 1 for hyperbolic vectoring
+          if(absolute(zExp) > 1 && p_LIMIT_INPUTS) begin                                // Angle < 1 for hyperbolic vectoring
             if(p_LOG_TESTS) $display("abs(ang) < 1 rad for hyperbolic vectoring");
              iTest--;
              continue;
@@ -293,6 +293,7 @@ module testbench;
         #1;
         iIter++;
 
+
         monitor.sample();
         if(p_LOG_TESTS && p_LOG_ITER)
           if(p_CORDIC_SYSTEM)
@@ -337,12 +338,12 @@ module testbench;
       zExpHist.push_back(zExp);
 
       // Save output errors
-      xErrorHist.push_back($abs(monitor.xOutReal - xExp));
-      yErrorHist.push_back($abs(monitor.yOutReal - yExp));
+      xErrorHist.push_back(absolute(monitor.xOutReal - xExp));
+      yErrorHist.push_back(absolute(monitor.yOutReal - yExp));
       if(p_CORDIC_SYSTEM)
-        zErrorHist.push_back(degreeWrap($abs(monitor.zOutDeg - zExp)));
+        zErrorHist.push_back(degreeWrap(absolute(monitor.zOutDeg - zExp)));
       else
-        zErrorHist.push_back($abs(monitor.zOutReal - zExp));
+        zErrorHist.push_back(absolute(monitor.zOutReal - zExp));
 
       // Save overflow information
       if(monitor.inpError)
@@ -399,6 +400,13 @@ module testbench;
     if(inp < -180)
       return inp + 360;
     return inp;
+  endfunction
+
+  function real absolute(real inp);
+    if(inp > 0)
+      return inp;
+    else
+      return -inp;
   endfunction
 endmodule
 

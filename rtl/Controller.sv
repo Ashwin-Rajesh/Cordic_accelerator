@@ -212,14 +212,13 @@ module Controller #(
               end
             end
           end
-
+          
           if (~controlRegister[p_CNTRL_ROT_SYS]) begin
             if(xValue[31] || (absY > xValue)) begin
               nextControlRegister[p_FLAG_INP_ERR] = 1'b1;
               nextState = p_POST_C;
             end
           end
-
         end
 
         p_CORDIC: begin

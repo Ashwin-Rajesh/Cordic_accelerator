@@ -60,14 +60,13 @@ interface BusInterface #(
   //          13      : Z Overflow Report Enable.
 
   // Flags    16      : Ready
-  //          17      : Error
-  //          18      : Input Error
-  //          19      : Overflow Error
-  //          20      : X Overflow
-  //          21      : Y Overflow
-  //          22      : Z Overflow
-  //          23, 27  : Iterations Elapsed
-  //          28, 32  : Overflow Iteration
+  //          17      : Input Error
+  //          18      : Overflow Error
+  //          19      : X Overflow
+  //          20      : Y Overflow
+  //          21      : Z Overflow
+  //          22, 26  : Iterations Elapsed
+  //          27, 31  : Overflow Iteration
 
   modport controller (
     input xInput, yInput, zInput, controlRegisterInput, clk, rst,
