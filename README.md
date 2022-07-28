@@ -19,6 +19,8 @@ Government Engineering College Thrissur
   - [```cordic_hyperbolic.ipynb```](docs/cordic_hyperbolic.ipynb) : Jupyter notebook characterizing hyperbolic mode performance
   - [```cordic.md```](docs/cordic.md) : Compute unit documentation
   - [```cordic_test.md```](docs/cordic_test.md) : Testbench documentation
+  - [```final_report.pdf```](docs/final_report.pdf) : Final project report pdf
+  - [```poster.pdf```](docs/poster.pdf) : Project poster pdf
 - ```incl``` : ```.svh``` files included in RTL or TB code
 - ```rtl``` : Synthesizable components written in system verilog
 - ```tb``` : Testbenches written in system verilog
