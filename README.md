@@ -3,6 +3,10 @@ Accelerator IP for computing transcendental functions using CORDIC algorithm.
 
 As part of final year project for APJ Abdul Kalam Technological University B Tech Electronics and Communication Program.
 
+![Poster page 1](./docs/poster_pg1.jpg)
+
+![Poster page 2](./docs/poster_pg2.jpg)
+
 Department of Electronics and Communication Engineering
 
 Government Engineering College Thrissur
